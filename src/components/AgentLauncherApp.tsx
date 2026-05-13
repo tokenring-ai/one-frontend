@@ -59,9 +59,7 @@ export default function AgentLauncherApp({
     <div className="w-full h-full flex flex-col bg-primary">
       {/* App header */}
       <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div
-          className={`w-7 h-7 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center shadow-sm [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-white`}
-        >
+        <div className={`w-7 h-7 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center shadow-sm [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-white`}>
           {icon}
         </div>
         <div>

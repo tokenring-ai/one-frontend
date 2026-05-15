@@ -186,7 +186,7 @@ export function useAgentEventState(agentId: string) {
           } catch (error: unknown) {
             if (abortController.signal.aborted) return;
 
-            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            const errorMessage = Error.isError(error) ? error.message : "Unknown error";
             console.error("Stream error, scheduling reconnection...", errorMessage);
             setConnectionError(errorMessage);
             setIsConnecting(false);

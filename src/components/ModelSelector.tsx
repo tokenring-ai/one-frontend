@@ -76,7 +76,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
       setIsSelecting(true);
       try {
         await chatRPCClient.setModel({ agentId, model: modelId });
-        void currentModel.mutate({ status: "success", model: modelId });
+        void currentModel.mutate(); //.mutate({ status: "success", model: modelId, modelSpec: currentModel.data.});
         setIsSelecting(false);
         setSelectingModelId(null);
         setIsOpen(false);

@@ -44,7 +44,10 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
   const filteredAvailableCommands = useMemo(() => {
     let ret: string[] = [];
     if (input.startsWith("/") && availableCommands.data) {
-      ret = availableCommands.data.filter(cmd => cmd.toLowerCase().startsWith(input.slice(1).toLowerCase())).sort();
+      ret = availableCommands.data
+        .filter(cmd => cmd.name.toLowerCase().startsWith(input.slice(1).toLowerCase()))
+        .map(cmd => cmd.name)
+        .sort();
       if (ret.length === 0) {
         ret = ["help"];
       } else if (ret.length < 4) {

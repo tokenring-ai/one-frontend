@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { checkpointRPCClient, type useAgentList, useCheckpointList } from "../rpc.ts";
 import { toastManager } from "./ui/toast.tsx";
 
-type CheckpointItem = { id: string; name: string; agentId: string; createdAt: number };
+type CheckpointItem = { id: number; name: string; agentId: string; createdAt: number };
 
 interface CheckpointBrowserProps {
   agents: ReturnType<typeof useAgentList>;
@@ -18,8 +18,8 @@ interface CheckpointBrowserProps {
 export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
   const navigate = useNavigate();
   const checkpoints = useCheckpointList();
-  const [launchingId, setLaunchingId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [launchingId, setLaunchingId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -99,7 +99,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
     }
   }, [highlightedIndex, isOpen]);
 
-  const launchFromCheckpoint = async (checkpointId: string) => {
+  const launchFromCheckpoint = async (checkpointId: number) => {
     setLaunchingId(checkpointId);
     try {
       const { agentId } = await checkpointRPCClient.launchAgentFromCheckpoint({ checkpointId, headless: false });

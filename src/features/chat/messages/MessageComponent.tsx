@@ -20,6 +20,7 @@ import InteractionResponseDisplay from "./components/InteractionResponseDisplay.
 import MessageDetails from "./components/MessageDetails.tsx";
 import MessageFooter from "./components/MessageFooter.tsx";
 import QuestionWithResponseDisplay from "./components/QuestionWithResponseDisplay.tsx";
+import ThinkingBlock from "./components/ThinkingBlock.tsx";
 import ToolCallDisplay from "./components/ToolCallDisplay.tsx";
 import { events } from "./eventConfig.tsx";
 import { getInputSource, getMessageDetails, getMessageText } from "./messageUtils.ts";
@@ -100,8 +101,10 @@ export default function MessageComponent({ msg, question, response }: MessageCom
           <ArtifactDisplay artifact={msg} />
         ) : isQuestionWithResponse ? (
           <QuestionWithResponseDisplay question={pairedQuestion!} {...(response !== undefined && { response })} />
-        ) : msg.type === "input.interaction" ? (
+                ) : msg.type === "input.interaction" ? (
           <InteractionResponseDisplay msg={msg as InteractionResponseMessage} />
+        ) : msg.type === "output.reasoning" ? (
+          <ThinkingBlock message={msg.message} />
         ) : messageText ? (
           <>
             {inputSource && <div className="text-primary font-bold font-mono text-sm mb-1">From: {inputSource}</div>}

@@ -1,10 +1,13 @@
-import { CheckCircle2, Loader2, Package, Settings2 } from "lucide-react";
+import { CheckCircle2, Package, Settings2 } from "lucide-react";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
+import ErrorState from "../../components/ui/ErrorState.tsx";
+import LoadingState from "../../components/ui/LoadingState.tsx";
 import { usePlugins } from "../../rpc.ts";
 
 function PluginCard({ plugin }: { plugin: { name: string; displayName: string; version: string; description: string; hasConfig: boolean } }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 bg-secondary border border-primary rounded-xl hover:border-indigo-500/30 transition-colors group">
-      <div className="shrink-0 w-9 h-9 rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+    <div className="flex items-start gap-3 px-4 py-3 bg-secondary border border-primary rounded-xl hover:border-accent-muted transition-colors group">
+      <div className="shrink-0 w-9 h-9 rounded-lg bg-linear-to-br from-accent to-violet-600 flex items-center justify-center shadow-sm">
         <Package className="w-4 h-4 text-white" />
       </div>
       <div className="flex-1 min-w-0">
@@ -35,14 +38,15 @@ export default function PluginsApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary overflow-y-auto">
+      <AppPageHeader
+        title="Plugins"
+        subtitle="Manage the plugins powering your TokenRing instance"
+        icon={<Package className="w-4 h-4" />}
+        iconGradient="from-accent to-violet-600"
+      />
+
       <div className="flex-1 py-6 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-primary text-2xl font-bold tracking-tight mb-1">Plugins</h1>
-            <p className="text-xs text-muted">Manage the plugins powering your TokenRing instance</p>
-          </div>
-
           {/* Installed plugins */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -53,14 +57,15 @@ export default function PluginsApp() {
             </div>
 
             {plugins.isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-6 h-6 text-muted animate-spin" />
-              </div>
+              <LoadingState message="Loading plugins…" className="py-16" />
             ) : plugins.error ? (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-warning">Failed to load plugins</p>
-                <p className="text-2xs text-muted mt-1">{String(plugins.error)}</p>
-              </div>
+              <ErrorState
+                title="Failed to load plugins"
+                error={plugins.error}
+                onRetry={() => void plugins.mutate()}
+                variant="inline"
+                className="py-6"
+              />
             ) : installedPlugins.length === 0 ? (
               <div className="px-4 py-12 text-center">
                 <Package className="w-8 h-8 text-muted mx-auto mb-3" />

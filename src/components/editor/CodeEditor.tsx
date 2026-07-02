@@ -1,6 +1,6 @@
 import Editor from "@monaco-editor/react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "../../hooks/useTheme.ts";
 
 interface FileViewerProps {
@@ -20,6 +20,11 @@ export default function CodeEditor({ file, content, onContentChange, onMarkSaved
   const [editorContent, setEditorContent] = useState(content);
   const [isModified, setIsModified] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+
+  useEffect(() => {
+    setEditorContent(content);
+    setIsModified(false);
+  }, [content, file]);
 
   const handleContentChange = (value: string | undefined) => {
     const newContent = value || "";
@@ -139,7 +144,7 @@ export default function CodeEditor({ file, content, onContentChange, onMarkSaved
             onClick={handleMarkSaved}
             disabled={!isModified}
             className={`px-2 py-0.5 rounded-md text-xs transition-colors focus-ring ${
-              isModified ? "bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]" : "opacity-30 cursor-not-allowed bg-indigo-600 text-white"
+              isModified ? "bg-accent text-white hover:bg-accent active:scale-[0.98]" : "opacity-30 cursor-not-allowed bg-accent text-white"
             }`}
             title="Mark as saved"
           >

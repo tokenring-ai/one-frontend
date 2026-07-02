@@ -1,39 +1,33 @@
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import {
+  Bot,
+  Bug,
+  Check,
+  Circle,
+  CircleCheck,
+  Cloud,
+  Code,
+  Database,
+  Eye,
+  FileCode,
+  FileSearch,
+  GitBranch,
+  Globe,
+  Layers,
+  MessageSquare,
+  Mic,
+  Newspaper,
+  Repeat,
+  Search,
+  Server,
+  Sparkles,
+  Terminal,
+  X,
+} from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  RiAmazonFill,
-  RiArticleFill,
-  RiBugFill,
-  RiCheckboxBlankCircleLine,
-  RiCheckboxCircleFill,
-  RiCheckLine,
-  RiCloseLine,
-  RiCloudFill,
-  RiCodeBoxFill,
-  RiCodeSSlashFill,
-  RiDatabaseFill,
-  RiEyeFill,
-  RiFileCodeFill,
-  RiFileSearchFill,
-  RiGitBranchFill,
-  RiGlobeFill,
-  RiMicFill,
-  RiNewsFill,
-  RiQuestionAnswerFill,
-  RiRedditFill,
-  RiRepeatFill,
-  RiRobotFill,
-  RiSearchLine,
-  RiServerFill,
-  RiSlackFill,
-  RiSparklingFill,
-  RiStackFill,
-  RiTaskFill,
-  RiTelegramFill,
-  RiTerminalBoxFill,
-  RiWordpressFill,
-} from "react-icons/ri";
 import { chatRPCClient, useAvailableTools, useEnabledTools } from "../rpc.ts";
+import { toastManager } from "./ui/toast.tsx";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
 
 interface ToolSelectorProps {
@@ -42,43 +36,45 @@ interface ToolSelectorProps {
 }
 
 // Package icon mapping
+const iconSm = "w-3.5 h-3.5";
+
 const packageIcons: Record<string, React.ReactNode> = {
-  "@tokenring-ai/agent": <RiRobotFill />,
-  "@tokenring-ai/ai-client": <RiDatabaseFill />,
-  "@tokenring-ai/websearch": <RiGlobeFill />,
-  "@tokenring-ai/filesystem": <RiCodeBoxFill />,
-  "@tokenring-ai/memory": <RiCloudFill />,
-  "@tokenring-ai/git": <RiGitBranchFill />,
-  "@tokenring-ai/testing": <RiBugFill />,
-  "@tokenring-ai/codebase": <RiFileCodeFill />,
-  "@tokenring-ai/code-watch": <RiEyeFill />,
-  "@tokenring-ai/file-index": <RiFileSearchFill />,
-  "@tokenring-ai/iterables": <RiRepeatFill />,
-  "@tokenring-ai/scripting": <RiCodeSSlashFill />,
-  "@tokenring-ai/tasks": <RiTaskFill />,
-  "@tokenring-ai/slack": <RiSlackFill />,
-  "@tokenring-ai/telegram": <RiTelegramFill />,
-  "@tokenring-ai/feedback": <RiQuestionAnswerFill />,
-  "@tokenring-ai/blog": <RiArticleFill />,
-  "@tokenring-ai/ghost-io": <RiArticleFill />,
-  "@tokenring-ai/wordpress": <RiWordpressFill />,
-  "@tokenring-ai/newsrpm": <RiNewsFill />,
-  "@tokenring-ai/reddit": <RiRedditFill />,
-  "@tokenring-ai/audio": <RiMicFill />,
-  "@tokenring-ai/linux-audio": <RiMicFill />,
-  "@tokenring-ai/sandbox": <RiCodeBoxFill />,
-  "@tokenring-ai/docker": <RiServerFill />,
-  "@tokenring-ai/kubernetes": <RiServerFill />,
-  "@tokenring-ai/aws": <RiAmazonFill />,
-  "@tokenring-ai/mcp": <RiDatabaseFill />,
-  "@tokenring-ai/research": <RiSparklingFill />,
-  "@tokenring-ai/cli": <RiTerminalBoxFill />,
-  "@tokenring-ai/web-host": <RiServerFill />,
+  "@tokenring-ai/agent": <Bot className={iconSm} />,
+  "@tokenring-ai/ai-client": <Database className={iconSm} />,
+  "@tokenring-ai/websearch": <Globe className={iconSm} />,
+  "@tokenring-ai/filesystem": <Code className={iconSm} />,
+  "@tokenring-ai/memory": <Cloud className={iconSm} />,
+  "@tokenring-ai/git": <GitBranch className={iconSm} />,
+  "@tokenring-ai/testing": <Bug className={iconSm} />,
+  "@tokenring-ai/codebase": <FileCode className={iconSm} />,
+  "@tokenring-ai/code-watch": <Eye className={iconSm} />,
+  "@tokenring-ai/file-index": <FileSearch className={iconSm} />,
+  "@tokenring-ai/iterables": <Repeat className={iconSm} />,
+  "@tokenring-ai/scripting": <Code className={iconSm} />,
+  "@tokenring-ai/tasks": <Layers className={iconSm} />,
+  "@tokenring-ai/slack": <MessageSquare className={iconSm} />,
+  "@tokenring-ai/telegram": <MessageSquare className={iconSm} />,
+  "@tokenring-ai/feedback": <MessageSquare className={iconSm} />,
+  "@tokenring-ai/blog": <Newspaper className={iconSm} />,
+  "@tokenring-ai/ghost-io": <Newspaper className={iconSm} />,
+  "@tokenring-ai/wordpress": <Newspaper className={iconSm} />,
+  "@tokenring-ai/newsrpm": <Newspaper className={iconSm} />,
+  "@tokenring-ai/reddit": <MessageSquare className={iconSm} />,
+  "@tokenring-ai/audio": <Mic className={iconSm} />,
+  "@tokenring-ai/linux-audio": <Mic className={iconSm} />,
+  "@tokenring-ai/sandbox": <Code className={iconSm} />,
+  "@tokenring-ai/docker": <Server className={iconSm} />,
+  "@tokenring-ai/kubernetes": <Server className={iconSm} />,
+  "@tokenring-ai/aws": <Cloud className={iconSm} />,
+  "@tokenring-ai/mcp": <Database className={iconSm} />,
+  "@tokenring-ai/research": <Sparkles className={iconSm} />,
+  "@tokenring-ai/cli": <Terminal className={iconSm} />,
+  "@tokenring-ai/web-host": <Server className={iconSm} />,
 };
 
 // Package color mapping
 const packageColors: Record<string, string> = {
-  "@tokenring-ai/agent": "text-indigo-600 dark:text-indigo-400",
+  "@tokenring-ai/agent": "text-accent",
   "@tokenring-ai/ai-client": "text-blue-600 dark:text-blue-400",
   "@tokenring-ai/websearch": "text-cyan-600 dark:text-cyan-400",
   "@tokenring-ai/filesystem": "text-emerald-600 dark:text-emerald-400",
@@ -91,7 +87,7 @@ const packageColors: Record<string, string> = {
   "@tokenring-ai/iterables": "text-teal-600 dark:text-teal-500",
   "@tokenring-ai/scripting": "text-lime-600 dark:text-lime-500",
   "@tokenring-ai/tasks": "text-green-600 dark:text-green-500",
-  "@tokenring-ai/slack": "text-indigo-600 dark:text-indigo-500",
+  "@tokenring-ai/slack": "text-accent",
   "@tokenring-ai/telegram": "text-blue-600 dark:text-blue-500",
   "@tokenring-ai/feedback": "text-purple-600 dark:text-purple-500",
   "@tokenring-ai/blog": "text-cyan-600 dark:text-cyan-500",
@@ -134,7 +130,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
         }
         void enabledTools.mutate();
       } catch (error: unknown) {
-        console.error("Failed to toggle tool:", error);
+        toastManager.error(errorAsString(error), { duration: 5000 });
       }
     },
     [agentId, enabledTools, enabledToolsData?.tools],
@@ -155,7 +151,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
         }
         void enabledTools.mutate();
       } catch (error: unknown) {
-        console.error("Failed to toggle category:", error);
+        toastManager.error(errorAsString(error), { duration: 5000 });
       }
     },
     [agentId, enabledTools, enabledToolsData?.tools],
@@ -216,7 +212,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
           aria-label={`Select tools. ${enabledToolsData?.tools?.length ?? 0} enabled`}
           title={`${enabledToolsData?.tools?.length ?? 0} tools enabled`}
         >
-          <RiStackFill className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
+          <Layers className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
           {!isIconTrigger && (
             <span className="text-xs font-mono text-muted group-hover:text-primary truncate max-w-48">{enabledToolsData?.tools?.length ?? 0} enabled</span>
           )}
@@ -232,7 +228,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
           <span className="text-sm flex-1 font-mono text-muted shrink-0">Tools</span>
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-2.5 flex items-center pointer-events-none">
-              <RiSearchLine className="w-4 h-4 text-muted" />
+              <Search className="w-4 h-4 text-muted" />
             </div>
             <input
               type="text"
@@ -252,7 +248,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
                 className="absolute inset-y-0 right-2 flex items-center p-0.5 rounded-md text-muted hover:text-primary hover:bg-hover transition-colors focus-ring"
                 aria-label="Clear search"
               >
-                <RiCloseLine className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -263,7 +259,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
             .sort()
             .map(category => {
               const isPackageExpanded = expandedCategories.has(category);
-              const packageIcon = packageIcons[category] || <RiDatabaseFill />;
+              const packageIcon = packageIcons[category] || <Database className={iconSm} />;
               const packageColor = packageColors[category] || packageColors.default;
 
               const categoryTools = filteredToolsByCategory.grouped[category];
@@ -337,17 +333,17 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
                       <div className="flex items-center gap-1">
                         {allEnabled ? (
                           <>
-                            <RiCloseLine className="w-3 h-3 text-emerald-500" />
+                            <X className="w-3 h-3 text-emerald-500" />
                             <span className="text-[10px] text-emerald-500 font-mono">Disable</span>
                           </>
                         ) : allDisabled ? (
                           <>
-                            <RiCheckboxBlankCircleLine className="w-3 h-3 text-muted hover:text-emerald-500" />
+                            <Circle className="w-3 h-3 text-muted hover:text-emerald-500" />
                             <span className="text-[10px] text-muted hover:text-emerald-500 font-mono">Enable</span>
                           </>
                         ) : (
                           <>
-                            <RiCheckboxCircleFill className="w-3 h-3 text-amber-500" />
+                            <CircleCheck className="w-3 h-3 text-amber-500" />
                             <span className="text-[10px] text-amber-500 font-mono">Mixed</span>
                           </>
                         )}
@@ -377,9 +373,9 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
                               {displayName}
                             </span>
                             {isEnabled ? (
-                              <RiCheckLine className="w-3 h-3 text-emerald-500 ml-2 shrink-0" aria-label="Enabled" />
+                              <Check className="w-3 h-3 text-emerald-500 ml-2 shrink-0" aria-label="Enabled" />
                             ) : (
-                              <RiCloseLine className="w-3 h-3 text-muted group-hover:text-primary ml-2 shrink-0" aria-label="Disabled" />
+                              <X className="w-3 h-3 text-muted group-hover:text-primary ml-2 shrink-0" aria-label="Disabled" />
                             )}
                           </div>
                         );

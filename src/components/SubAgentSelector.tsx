@@ -1,8 +1,9 @@
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import { Bot, Check, Loader2, Search, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { GiMegabot } from "react-icons/gi";
-import { RiCheckLine, RiCloseLine, RiLoader4Line, RiSearchLine } from "react-icons/ri";
 import { tasksRPCClient, useAvailableSubAgents, useEnabledSubAgents } from "../rpc.ts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
+import { toastManager } from "./ui/toast.tsx";
 
 interface SubAgentSelectorProps {
   agentId: string;
@@ -37,7 +38,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
         }
         void enabledSubAgents.mutate();
       } catch (error: unknown) {
-        console.error("Failed to toggle sub-agent:", error);
+        toastManager.error(errorAsString(error), { duration: 5000 });
       } finally {
         setLoadingAgent(null);
       }
@@ -64,7 +65,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
           aria-label={`Select sub-agents. ${enabledCount} enabled`}
           title={`${enabledCount} sub-agents enabled`}
         >
-          <GiMegabot className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
+          <Bot className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
           {!isIconTrigger && <span className="text-xs font-mono text-muted group-hover:text-primary truncate max-w-48">{enabledCount} enabled</span>}
         </button>
       </DropdownMenuTrigger>
@@ -78,7 +79,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
           <span className="text-sm flex-1 font-mono text-muted shrink-0">Task Agents</span>
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-2.5 flex items-center pointer-events-none">
-              <RiSearchLine className="w-4 h-4 text-muted" />
+              <Search className="w-4 h-4 text-muted" />
             </div>
             <input
               type="text"
@@ -113,6 +114,8 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
                     await tasksRPCClient.enableSubAgents({ agentId, agents: allAgentTypes });
                   }
                   void enabledSubAgents.mutate();
+                } catch (error: unknown) {
+                  toastManager.error(errorAsString(error), { duration: 5000 });
                 } finally {
                   setLoadingAll(false);
                 }
@@ -122,7 +125,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
             >
               <span className="text-muted">{loadingAll ? "Processing..." : allEnabled ? "Disable all sub-agents" : "Enable all sub-agents"}</span>
               {loadingAll ? (
-                <RiLoader4Line className="w-3 h-3 text-indigo-600 dark:text-indigo-400 animate-spin" aria-label="Loading" />
+                <Loader2 className="w-3 h-3 text-accent animate-spin" aria-label="Loading" />
               ) : (
                 <span className="text-muted">
                   {enabledCount}/{agentCount}
@@ -145,12 +148,12 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
                 className="flex items-center cursor-pointer py-1.5 rounded-md px-3 transition-colors group hover:bg-hover"
               >
                 <div
-                  className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${isEnabled ? "bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.5)]" : "bg-muted/50"}`}
+                  className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${isEnabled ? "bg-accent shadow-[0_0_6px_rgba(99,102,241,0.5)]" : "bg-muted/50"}`}
                 />
                 <div className="flex-1 min-w-0">
                   <div
                     className={`text-xs font-mono leading-tight truncate ${
-                      isEnabled ? "text-indigo-700 dark:text-indigo-400 font-medium" : "text-muted group-hover:text-primary"
+                      isEnabled ? "text-accent font-medium" : "text-muted group-hover:text-primary"
                     }`}
                   >
                     {agent.displayName}
@@ -158,11 +161,11 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
                   {agent.description && <div className="text-2xs text-dim font-mono leading-tight truncate mt-0.5">{agent.description}</div>}
                 </div>
                 {loadingAgent === agent.type ? (
-                  <RiLoader4Line className="w-3 h-3 text-indigo-600 dark:text-indigo-400 ml-2 shrink-0 animate-spin" aria-label="Loading" />
+                  <Loader2 className="w-3 h-3 text-accent ml-2 shrink-0 animate-spin" aria-label="Loading" />
                 ) : isEnabled ? (
-                  <RiCheckLine className="w-3 h-3 text-indigo-600 dark:text-indigo-400 ml-2 shrink-0" aria-label="Enabled" />
+                  <Check className="w-3 h-3 text-accent ml-2 shrink-0" aria-label="Enabled" />
                 ) : (
-                  <RiCloseLine className="w-3 h-3 text-muted ml-2 shrink-0" aria-label="Disabled" />
+                  <X className="w-3 h-3 text-muted ml-2 shrink-0" aria-label="Disabled" />
                 )}
               </div>
             );

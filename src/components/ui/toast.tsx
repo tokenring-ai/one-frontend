@@ -123,7 +123,7 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
 }
 
 // Simple toast context and hook for easy usage
-interface ToastItem extends ToastProps {
+export interface ToastItem extends ToastProps {
   id: string;
 }
 

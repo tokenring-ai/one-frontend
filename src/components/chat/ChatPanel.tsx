@@ -84,6 +84,7 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
         setTimeout(() => setSubmitFeedback(null), 2000);
       }
     } catch (error) {
+      setInput(message);
       toastManager.error(errorAsString(error), { duration: 5000 });
       setSubmitFeedback({ message: "Failed to send", type: "error" });
       setTimeout(() => setSubmitFeedback(null), 2000);

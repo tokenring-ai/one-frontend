@@ -24,7 +24,7 @@ export default function ConfirmDialog({
   const variantStyles = {
     danger: "bg-red-600 hover:bg-red-500 shadow-red-500/20",
     warning: "bg-amber-600 hover:bg-amber-500 shadow-amber-500/20",
-    info: "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20",
+    info: "bg-accent hover:bg-accent-hover shadow-button-primary",
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

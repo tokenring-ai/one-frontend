@@ -1,4 +1,5 @@
 import type { BlogPost, BlogPostListItem } from "@tokenring-ai/blog/BlogProvider";
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { formatDate } from "@tokenring-ai/utility/date/formatDate";
 import { BookOpen, Calendar, ChevronDown, ExternalLink, FilePlus, Globe, Image, Loader2, Pencil, RefreshCw, Tag, WifiOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -7,6 +8,8 @@ import ChatPanel from "../../components/chat/ChatPanel.tsx";
 import FilterTabs, { type FilterTabOption } from "../../components/ui/FilterTabs.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
+import { sanitizeBlogHtml } from "../../lib/sanitizeHtml.ts";
 import { agentRPCClient, blogRPCClient, useBlogPost, useBlogPosts, useBlogState } from "../../rpc.ts";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -57,8 +60,8 @@ function BlogSelector({
     try {
       await blogRPCClient.updateBlogState({ agentId, selectedProvider: name });
       onProviderChange(name);
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to switch blog", { duration: 4000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 4000 });
     } finally {
       setSwitching(false);
     }
@@ -129,7 +132,7 @@ function PostListItem({ post, selected, onClick }: { post: BlogPostListItem; sel
       type="button"
       onClick={onClick}
       className={`w-full flex flex-col gap-1 px-3 py-3 text-left border-b border-primary hover:bg-hover transition-colors focus-ring cursor-pointer ${
-        selected ? "bg-active border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent"
+        selected ? "bg-active border-l-2 border-l-accent" : "border-l-2 border-l-transparent"
       }`}
       aria-current={selected ? "true" : undefined}
     >
@@ -172,6 +175,7 @@ function PostViewer({
 }) {
   const [starting, setStarting] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const sanitizedHtml = useMemo(() => (post.html ? sanitizeBlogHtml(post.html) : ""), [post.html]);
 
   const handleWorkOnPost = async () => {
     setStarting(true);
@@ -189,8 +193,8 @@ function PostViewer({
       await blogRPCClient.updatePost({ provider, id: post.id, updatedData: { status: "published" }});
       toastManager.success("Post published!", { duration: 3000 });
       onRefresh();
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to publish", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
     } finally {
       setPublishing(false);
     }
@@ -245,7 +249,7 @@ function PostViewer({
             type="button"
             onClick={handleWorkOnPost}
             disabled={starting}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring shadow-button-primary"
+            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring shadow-button-primary"
           >
             {starting ? (
               <>
@@ -288,8 +292,8 @@ function PostViewer({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
-        {post.html ? (
-          <article className="prose prose-sm dark:prose-invert max-w-none text-primary" dangerouslySetInnerHTML={{ __html: post.html }} />
+        {sanitizedHtml ? (
+          <article className="prose prose-sm dark:prose-invert max-w-none text-primary" dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
         ) : (
           <div className="flex flex-col items-center justify-center h-48 text-center gap-3 text-muted">
             <BookOpen className="w-8 h-8 opacity-30" />
@@ -352,7 +356,7 @@ function PostListSidebar({
           placeholder="Search posts..."
           value={search}
           onChange={e => onSearch(e.target.value)}
-          className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+          className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus-accent transition-all"
         />
       </div>
 
@@ -370,7 +374,7 @@ function PostListSidebar({
                 type="button"
                 onClick={onNewPost}
                 disabled={launchingNew}
-                className="text-xs text-indigo-500 hover:text-indigo-400 cursor-pointer transition-colors"
+                className="text-xs text-accent hover:text-accent-soft cursor-pointer transition-colors"
               >
                 Create your first post →
               </button>
@@ -454,7 +458,7 @@ function PostViewerArea({
         type="button"
         onClick={onNewPost}
         disabled={launchingNew}
-        className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer disabled:opacity-50 focus-ring shadow-button-primary"
+        className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-colors cursor-pointer disabled:opacity-50 focus-ring shadow-button-primary"
       >
         {launchingNew ? (
           <>
@@ -473,9 +477,12 @@ function PostViewerArea({
 // ─── Main BlogApp ─────────────────────────────────────────────────────────────
 
 export default function BlogApp() {
-  const [agentId, setAgentId] = useState<string | null>(null);
+  const { agentId, error: initError } = useHeadlessAgent({
+    appName: "Blog app",
+    preferredTypes: ["blog", "writer", "contentWriter", "content-writer", "managingEditor"],
+    noTypesMessage: "No agent types available.",
+  });
   const [chatAgentId, setChatAgentId] = useState<string | null>(null);
-  const [initError, setInitError] = useState<string | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -487,38 +494,6 @@ export default function BlogApp() {
   const blogStateData = blogState.data?.status === "success" ? blogState.data : null;
   const posts = useBlogPosts(provider ?? undefined, statusFilter, 100);
   const selectedPost = useBlogPost(provider ?? undefined, selectedPostId ?? undefined);
-
-  // Create a headless blog agent on mount
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const types = await agentRPCClient.getAgentTypes({});
-        if (cancelled) return;
-        const preferred = types.find(t => ["blog", "writer", "contentWriter", "content-writer", "managingEditor"].includes(t.type)) ?? types[0];
-        if (!preferred) {
-          setInitError("No agent types available.");
-          return;
-        }
-        const { id } = await agentRPCClient.createAgent({ agentType: preferred.type, headless: true });
-        if (!cancelled) setAgentId(id);
-      } catch (err: any) {
-        if (!cancelled) setInitError(err.message || "Failed to initialize");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Clean up headless agent on unmount
-  useEffect(() => {
-    return () => {
-      if (agentId) {
-        agentRPCClient.deleteAgent({ agentId, reason: "Blog app unmounted" }).catch(() => {});
-      }
-    };
-  }, [agentId]);
 
   // Sync provider and available providers from blog state
   useEffect(() => {
@@ -569,8 +544,8 @@ export default function BlogApp() {
     setLaunchingNew(true);
     try {
       await handleWorkOnPost("");
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to create agent", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
     } finally {
       setLaunchingNew(false);
     }
@@ -596,7 +571,7 @@ export default function BlogApp() {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg cursor-pointer focus-ring"
+          className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg cursor-pointer focus-ring"
         >
           Retry
         </button>
@@ -627,7 +602,7 @@ export default function BlogApp() {
         <div className="w-px h-5 bg-primary/70 mx-0.5 shrink-0" aria-hidden="true" />
         <AgentLauncherBar
           buttonLabel="New post"
-          buttonClassName="bg-indigo-600 hover:bg-indigo-500 text-white shadow-button-primary"
+          buttonClassName="bg-accent hover:bg-accent-hover text-white shadow-button-primary"
           onLaunch={id => setChatAgentId(id)}
         />
       </div>

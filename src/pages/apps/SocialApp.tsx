@@ -3,8 +3,8 @@ import AgentLauncherApp from "../../components/AgentLauncherApp.tsx";
 
 const PLATFORM_CARDS = [
   { name: "Reddit", color: "from-orange-500 to-red-600", description: "Browse and post to Reddit" },
-  { name: "Discord", color: "from-indigo-500 to-violet-600", description: "Manage Discord servers and channels" },
-  { name: "Slack", color: "from-purple-500 to-indigo-600", description: "Send messages and manage workspaces" },
+  { name: "Discord", color: "from-accent to-violet-600", description: "Manage Discord servers and channels" },
+  { name: "Slack", color: "from-purple-500 to-accent-hover", description: "Send messages and manage workspaces" },
   { name: "Telegram", color: "from-sky-500 to-blue-600", description: "Send messages via Telegram" },
   { name: "X / Twitter", color: "from-gray-700 to-gray-900", description: "Post and browse X (Twitter)" },
 ];
@@ -35,7 +35,7 @@ export default function SocialApp() {
       label="Social"
       description="Connect Reddit, Discord, Slack, Telegram, and X"
       icon={<Share2 />}
-      gradient="from-blue-500 to-indigo-600"
+      gradient="from-blue-500 to-accent-hover"
       agentType="social"
       launchDescription="Launch a social agent to interact with Reddit, Discord, Slack, Telegram, and X through a unified conversational interface."
       launchLabel="Launch Social Agent"

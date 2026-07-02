@@ -1,6 +1,8 @@
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { Check, Copy, Download, File, FileCode, FileJson, FileText, Image as ImageIcon, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { toastManager } from "../ui/toast.tsx";
 
 interface AttachmentChipProps {
   attachment: BaseAttachment;
@@ -84,7 +86,7 @@ function getAttachmentAccentClasses(mimeType: string) {
   switch (family) {
     case "image":
       return {
-        panel: "bg-linear-to-br from-sky-100 via-cyan-50 to-indigo-100 dark:from-sky-500/20 dark:via-cyan-500/10 dark:to-indigo-500/20",
+        panel: "bg-linear-to-br from-sky-100 via-cyan-50 to-violet-100 dark:from-sky-500/20 dark:via-cyan-500/10 dark:to-accent-subtle",
         badge: "bg-secondary text-sky-700 dark:text-sky-200 border-primary",
         icon: "text-sky-600 dark:text-sky-300",
       };
@@ -172,47 +174,43 @@ function getImagePreviewSrc(attachment: BaseAttachment): string | null {
 }
 
 function downloadAttachment(attachment: BaseAttachment) {
-  try {
-    if (attachment.encoding === "href") {
-      const a = document.createElement("a");
-      a.href = attachment.body;
-      a.download = attachment.name;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return;
-    }
-
-    let blob: Blob;
-
-    if (attachment.encoding === "base64") {
-      const binaryString = atob(attachment.body);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      blob = new Blob([bytes], { type: attachment.mimeType || "application/octet-stream" });
-    } else {
-      blob = new Blob([attachment.body], { type: attachment.mimeType || "text/plain" });
-    }
-
-    const url = URL.createObjectURL(blob);
+  if (attachment.encoding === "href") {
     const a = document.createElement("a");
-    a.href = url;
+    a.href = attachment.body;
     a.download = attachment.name;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 100);
-  } catch (error: unknown) {
-    console.error("Failed to download attachment:", error);
+    return;
   }
+
+  let blob: Blob;
+
+  if (attachment.encoding === "base64") {
+    const binaryString = atob(attachment.body);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    blob = new Blob([bytes], { type: attachment.mimeType || "application/octet-stream" });
+  } else {
+    blob = new Blob([attachment.body], { type: attachment.mimeType || "text/plain" });
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = attachment.name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 }
 
 function formatFileSize(attachment: BaseAttachment): string {
@@ -253,8 +251,13 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
   const handleDownload = (e?: React.MouseEvent | React.KeyboardEvent) => {
     e?.stopPropagation();
     setDownloading(true);
-    downloadAttachment(attachment);
-    setTimeout(() => setDownloading(false), 1000);
+    try {
+      downloadAttachment(attachment);
+    } catch (error: unknown) {
+      toastManager.error(`Failed to download "${attachment.name}": ${errorAsString(error)}`, { duration: 5000 });
+    } finally {
+      setTimeout(() => setDownloading(false), 1000);
+    }
   };
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -270,7 +273,7 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error: unknown) {
-      console.error("Failed to copy to clipboard:", error);
+      toastManager.error(`Failed to copy "${attachment.name}" to clipboard: ${errorAsString(error)}`, { duration: 5000 });
     }
   };
 

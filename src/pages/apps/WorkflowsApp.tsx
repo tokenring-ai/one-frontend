@@ -1,6 +1,6 @@
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { GitBranch, Loader2, Pause } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toastManager } from "../../components/ui/toast.tsx";
 import { useAgentList, useWorkflows, workflowRPCClient } from "../../rpc.ts";
@@ -24,8 +24,12 @@ export default function WorkflowsApp() {
     }
   };
 
-  // Agents that look like they were spawned from workflows (heuristic: non-idle with activity text)
-  const runningAgents = agents.data?.filter(a => !a.idle) ?? [];
+  const workflowAgentTypes = useMemo(() => new Set(workflows.data?.map(w => w.agentType) ?? []), [workflows.data]);
+
+  const runningAgents = useMemo(
+    () => (agents.data ?? []).filter(a => !a.idle && workflowAgentTypes.has(a.agentType)),
+    [agents.data, workflowAgentTypes],
+  );
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">

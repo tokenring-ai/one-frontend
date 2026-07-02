@@ -102,9 +102,20 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
   const launchFromCheckpoint = async (checkpointId: number) => {
     setLaunchingId(checkpointId);
     try {
-      const { agentId } = await checkpointRPCClient.launchAgentFromCheckpoint({ checkpointId, headless: false });
-      await agents.mutate();
-      void navigate(`/agent/${agentId}`);
+      const result = await checkpointRPCClient.launchAgentFromCheckpoint({ checkpointId, headless: false });
+      switch (result.status) {
+        case "success":
+          await agents.mutate();
+          void navigate(`/agent/${result.agentId}`);
+          break;
+        case "checkpointNotFound":
+          toastManager.error("Checkpoint not found", { duration: 3000 });
+          break;
+        default:
+          const exhaustive: any = result satisfies never;
+          toastManager.error(`Failed to launch agent from checkpoint, unknown result: ${ exhaustive.status }`, { duration: 3000 });
+          break;
+      }
     } catch (error) {
       toastManager.error(errorAsString(error), { duration: 5000 });
     } finally {
@@ -129,7 +140,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
         <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-500/90 uppercase tracking-widest flex items-center gap-1.5">
-          <History className="w-3.5 h-3.5" /> Resume from Checkpoint
+          <History className="w-3.5 h-3.5"/> Resume from Checkpoint
         </span>
         <span className="text-2xs text-muted">{checkpoints.data.length} saved</span>
       </div>
@@ -150,7 +161,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
           aria-label="Select a checkpoint"
           aria-haspopup="listbox"
         >
-          <History className="w-3.5 h-3.5 text-emerald-500/70 shrink-0" />
+          <History className="w-3.5 h-3.5 text-emerald-500/70 shrink-0"/>
           <div className="flex-1 min-w-0">
             {selected ? (
               <>
@@ -161,7 +172,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
               <span className="text-sm text-muted">Select a checkpoint...</span>
             )}
           </div>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}/>
         </button>
 
         {/* Expandable dropdown list */}
@@ -172,14 +183,14 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                 {/* Search */}
                 <div className="px-3 py-2 border-b border-primary">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"/>
                     <input
                       ref={searchRef}
                       type="text"
                       placeholder="Filter checkpoints..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full bg-input border border-primary rounded-md py-1.5 pl-8 pr-8 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                      className="w-full bg-input border border-primary rounded-md py-1.5 pl-8 pr-8 text-xs text-primary placeholder-muted focus-accent transition-all"
                     />
                     {searchQuery && (
                       <button
@@ -188,7 +199,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted hover:bg-hover hover:text-primary cursor-pointer focus-ring"
                         aria-label="Clear search"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3.5 h-3.5"/>
                       </button>
                     )}
                   </div>
@@ -219,7 +230,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                             className="w-full flex items-center gap-1.5 px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wider hover:bg-hover transition-colors cursor-pointer"
                             aria-expanded={!isCollapsed}
                           >
-                            {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            {isCollapsed ? <ChevronRight className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
                             <span>{date}</span>
                             <span className="text-2xs font-mono text-muted ml-auto">{items.length}</span>
                           </button>
@@ -250,9 +261,9 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                                       data-checkpoint-item
                                       className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer ${
                                         cp.id === selectedId
-                                          ? "bg-indigo-500/10 border-l-4 border-indigo-500"
+                                          ? "bg-accent-subtle border-l-4 border-accent"
                                           : highlightedIndex === flatIndex
-                                            ? "bg-hover border-l-4 border-indigo-500/50"
+                                            ? "bg-hover border-l-4 border-accent-strong"
                                             : "border-l-4 border-transparent"
                                       }`}
                                       role="option"
@@ -260,12 +271,12 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                                     >
                                       <div
                                         className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                          cp.id === selectedId ? "bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.6)]" : "bg-tertiary"
+                                          cp.id === selectedId ? "bg-accent shadow-accent" : "bg-tertiary"
                                         }`}
                                       />
                                       <span
                                         className={`flex-1 text-sm truncate ${
-                                          cp.id === selectedId ? "text-indigo-600 dark:text-indigo-400 font-medium" : "text-primary"
+                                          cp.id === selectedId ? "text-accent font-medium" : "text-primary"
                                         }`}
                                       >
                                         {cp.name}
@@ -307,17 +318,17 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                 aria-label={`Clear selection`}
                 title="Clear selection"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3 h-3"/>
                 Clear
               </button>
               <button
                 type="button"
                 onClick={() => launchFromCheckpoint(selected.id)}
                 disabled={launchingId === selected.id}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-lg shadow-indigo-600/20"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-button-primary"
                 aria-label={`Launch agent from checkpoint: ${selected.name}`}
               >
-                {launchingId === selected.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                {launchingId === selected.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <RotateCcw className="w-3.5 h-3.5"/>}
                 Launch
               </button>
             </div>

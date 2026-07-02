@@ -25,9 +25,9 @@ export default function FilterTabs<T extends string>({
   onChange,
   className,
   tabClassName,
-  activeTabClassName = "border-indigo-500 text-primary",
+  activeTabClassName = "border-accent text-primary",
   inactiveTabClassName = "border-transparent text-muted hover:text-primary",
-  activeCountClassName = "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  activeCountClassName = "bg-accent-muted text-accent",
   inactiveCountClassName = "bg-tertiary text-muted",
   showZeroCounts = false,
 }: FilterTabsProps<T>) {

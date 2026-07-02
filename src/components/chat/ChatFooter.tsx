@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { File, FileCode, FileText, FolderOpen, History, Image, Paperclip, Send, Square, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { agentRPCClient } from "../../rpc.ts";
 import HookSelector from "../HookSelector.tsx";
+import { toastManager } from "../ui/toast.tsx";
 import ModelSelector from "../ModelSelector.tsx";
 import SubAgentSelector from "../SubAgentSelector.tsx";
 import ToolSelector from "../ToolSelector.tsx";
@@ -165,7 +167,7 @@ export default function ChatFooter({
         for (const file of files) {
           // Check file size
           if (file.size > MAX_FILE_SIZE) {
-            console.warn(`File ${file.name} exceeds 5MB limit`);
+            toastManager.warning(`"${file.name}" exceeds the 5MB limit and was not attached.`, { duration: 5000 });
             continue;
           }
 
@@ -173,7 +175,7 @@ export default function ChatFooter({
             const attachment = await readFileAsAttachment(file);
             newAttachments.push(attachment);
           } catch (error: unknown) {
-            console.error(`Failed to read file ${file.name}:`, error);
+            toastManager.error(`Failed to read "${file.name}": ${errorAsString(error)}`, { duration: 5000 });
           }
         }
 
@@ -201,7 +203,7 @@ export default function ChatFooter({
         for (const file of Array.from(files)) {
           // Check file size
           if (file.size > MAX_FILE_SIZE) {
-            console.warn(`File ${file.name} exceeds 5MB limit`);
+            toastManager.warning(`"${file.name}" exceeds the 5MB limit and was not attached.`, { duration: 5000 });
             continue;
           }
 
@@ -209,7 +211,7 @@ export default function ChatFooter({
             const attachment = await readFileAsAttachment(file);
             newAttachments.push(attachment);
           } catch (error: unknown) {
-            console.error(`Failed to read file ${file.name}:`, error);
+            toastManager.error(`Failed to read "${file.name}": ${errorAsString(error)}`, { duration: 5000 });
           }
         }
 

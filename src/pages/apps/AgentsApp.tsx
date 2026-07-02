@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CheckpointBrowser from "../../components/CheckpointBrowser.tsx";
 import ConfirmDialog from "../../components/overlay/confirm-dialog.tsx";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
 import { agentRPCClient, useAgentList, useAgentTypes, useWorkflows, workflowRPCClient } from "../../rpc.ts";
 
@@ -78,16 +79,15 @@ export default function AgentsApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
+      <AppPageHeader
+        title="Agents"
+        subtitle="Create, manage, and monitor AI agents"
+        icon={<Cpu className="w-4 h-4" />}
+        iconGradient="from-amber-500 to-orange-600"
+      />
+
       <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-primary text-xl font-bold tracking-tight mb-1 flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-amber-500" /> Agents
-            </h1>
-            <p className="text-xs text-muted">Create, manage, and monitor AI agents</p>
-          </div>
-
           {/* Active Agents */}
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
@@ -105,7 +105,7 @@ export default function AgentsApp() {
                   <button
                     type="button"
                     onClick={() => document.querySelector<HTMLButtonElement>("[data-launch-agent-btn]")?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors focus-ring shadow-lg shadow-indigo-600/20 cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors focus-ring shadow-button-primary cursor-pointer"
                     aria-label="Create a new agent to get started"
                   >
                     <User className="w-4 h-4" />
@@ -190,7 +190,7 @@ export default function AgentsApp() {
           {/* Launch Agent */}
           <div className="space-y-3">
             <div className="px-1">
-              <span className="text-2xs font-bold text-indigo-500/90 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-accent/90 uppercase tracking-widest flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" /> Launch Agent
               </span>
             </div>
@@ -204,11 +204,11 @@ export default function AgentsApp() {
                       key={t.type}
                       onClick={() => createAgent(t.type)}
                       disabled={creatingAgentType === t.type}
-                      className="flex items-center gap-3 bg-secondary border border-primary px-3 py-2.5 rounded-lg text-left hover:bg-hover hover:border-indigo-500/50 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-sm"
+                      className="flex items-center gap-3 bg-secondary border border-primary px-3 py-2.5 rounded-lg text-left hover:bg-hover hover:border-accent-strong transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-sm"
                       aria-label={`Create new agent: ${t.displayName}`}
                       data-launch-agent-btn={idx === 0 ? "true" : undefined}
                     >
-                      <div className="shrink-0 text-indigo-500/70">
+                      <div className="shrink-0 text-accent/70">
                         {creatingAgentType === t.type ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <User className="w-3.5 h-3.5" />}
                       </div>
                       <div className="min-w-0">

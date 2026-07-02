@@ -24,7 +24,7 @@ export default function AppCard({ app }: AppCardProps) {
       onClick={() => navigate(app.path)}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className="group flex flex-col items-center gap-3 p-4 bg-secondary border border-primary rounded-xl hover:border-indigo-500/40 hover:shadow-card transition-all cursor-pointer focus-ring text-center w-full"
+      className="group flex flex-col items-center gap-3 p-4 bg-secondary border border-primary rounded-xl hover:border-accent/40 hover:shadow-card transition-all cursor-pointer focus-ring text-center w-full"
       aria-label={`Open ${app.label}`}
     >
       {/* Icon badge */}

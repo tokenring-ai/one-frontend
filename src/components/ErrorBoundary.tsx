@@ -72,7 +72,7 @@ function ResetButton({ onReset }: { onReset: () => void }) {
       type="button"
       onClick={handleReset}
       disabled={isResetting}
-      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed text-white rounded-lg transition-all mt-4 flex items-center gap-2 shadow-lg shadow-indigo-600/20 focus-ring"
+      className="px-4 py-2 btn-accent rounded-lg transition-all mt-4 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
     >
       {isResetting ? (
         <>

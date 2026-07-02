@@ -2,7 +2,9 @@ import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { Loader2, Plus, Terminal, Trash2, Unplug } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ConfirmDialog from "../../components/overlay/confirm-dialog.tsx";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useTerminalOutput } from "../../hooks/useTerminalOutput.ts";
 import { terminalRPCClient, useTerminalList } from "../../rpc.ts";
 
 type TerminalSession = {
@@ -22,64 +24,38 @@ export default function TerminalApp() {
 
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Tracks the current output position for the active terminal, outside of React state
-  // so the poll closure always reads the latest value without stale closure issues.
-  const positionRef = useRef<number>(0);
 
-  // Poll output for active terminal
+  const activeResume = activeTerminal ? sessions[activeTerminal] : undefined;
+  const outputStream = useTerminalOutput(activeTerminal, activeResume);
+
   useEffect(() => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    if (!activeTerminal) return;
-
-    // Initialize position from any existing session when switching terminals
-    setSessions(prev => {
-      positionRef.current = prev[activeTerminal]?.position ?? 0;
-      return prev;
-    });
-
-    const terminalName = activeTerminal;
-
-    const poll = async () => {
-      try {
-        const fromPosition = positionRef.current;
-        const result = await terminalRPCClient.retrieveOutput({
-          terminalName,
-          fromPosition,
-        });
-        if (result.output || result.position !== fromPosition || result.complete) {
-          positionRef.current = result.position;
-          setSessions(prev => {
-            const existing = prev[terminalName];
-            return {
-              ...prev,
-              [terminalName]: {
-                name: terminalName,
-                output: (existing?.output ?? "") + result.output,
-                position: result.position,
-                complete: result.complete,
-              },
-            };
-          });
-        }
-      } catch {
-        // terminal may have been terminated
-      }
-    };
-
-    void poll();
-    pollRef.current = setInterval(poll, 800);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [activeTerminal]);
-
-  // Auto-scroll to bottom when output changes
-  useEffect(() => {
-    if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    if (!activeTerminal || !outputStream.data) {
+      return;
     }
-  }, []);
+
+    setSessions(prev => ({
+      ...prev,
+      [activeTerminal]: {
+        name: activeTerminal,
+        output: outputStream.data!.output,
+        position: outputStream.data!.position,
+        complete: outputStream.data!.complete,
+      },
+    }));
+  }, [activeTerminal, outputStream.data]);
+
+  const activeOutput = activeTerminal ? outputStream.data?.output ?? sessions[activeTerminal]?.output : undefined;
+  const streamError = outputStream.error ? errorAsString(outputStream.error) : null;
+
+  // Auto-scroll to bottom when output changes (rAF ensures layout is updated first)
+  useEffect(() => {
+    const el = outputRef.current;
+    if (!el) return;
+    const frame = requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeOutput, activeTerminal]);
 
   // Focus input when switching terminals
   useEffect(() => {
@@ -87,8 +63,6 @@ export default function TerminalApp() {
   }, [activeTerminal]);
 
   const connectToTerminal = useCallback((terminalName: string) => {
-    // Reset position so polling restarts from the session's last known position (or 0).
-    // The useEffect on activeTerminal will sync positionRef from existing session state.
     setActiveTerminal(terminalName);
   }, []);
 
@@ -136,7 +110,12 @@ export default function TerminalApp() {
     }
   };
 
-  const activeSession = activeTerminal ? sessions[activeTerminal] : null;
+  const activeSession = activeTerminal
+    ? {
+        output: outputStream.data?.output ?? sessions[activeTerminal]?.output ?? "",
+        complete: outputStream.data?.complete ?? sessions[activeTerminal]?.complete ?? false,
+      }
+    : null;
   const activeInfo = terminals.data?.terminals.find(t => t.name === activeTerminal);
 
   if (terminals.isLoading) {
@@ -149,15 +128,12 @@ export default function TerminalApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
-      {/* Header */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
-          <Terminal className="w-4 h-4 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-sm font-semibold text-primary">Terminal</h1>
-          <p className="text-2xs text-muted">Create, manage, and interact with terminals</p>
-        </div>
+      <AppPageHeader
+        title="Terminal"
+        subtitle="Create, manage, and interact with terminals"
+        icon={<Terminal className="w-4 h-4" />}
+        iconGradient="from-emerald-500 to-green-600"
+      >
         <button
           type="button"
           onClick={spawnTerminal}
@@ -166,7 +142,7 @@ export default function TerminalApp() {
         >
           {spawning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New Terminal
         </button>
-      </div>
+      </AppPageHeader>
 
       <div className="flex-1 flex min-h-0">
         {/* Sidebar — terminal list */}
@@ -233,13 +209,19 @@ export default function TerminalApp() {
                 </button>
               </div>
 
+              {streamError && (
+                <div role="alert" className="shrink-0 px-4 py-2 bg-red-500/10 border-b border-red-500/30 text-xs text-red-400 font-mono">
+                  Terminal output unavailable: {streamError}
+                </div>
+              )}
+
               {/* Terminal output */}
               <div
                 ref={outputRef}
                 className="flex-1 overflow-y-auto bg-[#1a1a2e] p-4 font-mono text-xs text-green-400 whitespace-pre-wrap break-all select-text"
                 onClick={() => inputRef.current?.focus()}
               >
-                {activeSession?.output || <span className="text-muted">Connecting...</span>}
+                {activeSession?.output || (outputStream.isLoading ? <span className="text-muted">Connecting...</span> : <span className="text-muted">Waiting for output...</span>)}
                 {activeSession?.complete && <div className="text-muted mt-2">[Process exited]</div>}
               </div>
 

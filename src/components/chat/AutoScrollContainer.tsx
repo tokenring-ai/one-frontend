@@ -154,7 +154,7 @@ export default function AutoScrollContainer({ children, className = "" }: AutoSc
             }}
             exit={{ opacity: 0, y: 10, scale: 0.8 }}
             onClick={scrollToBottom}
-            className="absolute right-4 bottom-4 p-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white transition-colors z-20 shadow-button focus-ring"
+            className="absolute right-4 bottom-4 p-1.5 rounded-full bg-accent hover:bg-accent-hover text-white transition-colors z-20 shadow-button focus-ring"
             title="Scroll to bottom"
             aria-label="Scroll to bottom of chat"
           >

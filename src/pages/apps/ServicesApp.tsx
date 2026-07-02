@@ -1,6 +1,7 @@
 import { Cpu, Loader2, Plug, ScrollText, Wrench, Zap } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { useAppLogs, useAvailableHooks, useAvailableTools, useChatModelsByProvider } from "../../rpc.ts";
 
 type Tab = "tools" | "models" | "hooks" | "logs";
@@ -10,7 +11,7 @@ export default function ServicesApp() {
   const availableTools = useAvailableTools();
   const modelsByProvider = useChatModelsByProvider();
   const availableHooks = useAvailableHooks();
-  const appLogs = useAppLogs();
+  const appLogs = useAppLogs({ enabled: activeTab === "logs" });
 
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "tools", label: "Tools", icon: <Wrench className="w-3.5 h-3.5" /> },
@@ -21,16 +22,12 @@ export default function ServicesApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
-      {/* App header */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
-          <Plug className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-primary">Services</h1>
-          <p className="text-2xs text-muted">Tools, AI models, and lifecycle hooks</p>
-        </div>
-      </div>
+      <AppPageHeader
+        title="Services"
+        subtitle="Tools, AI models, and lifecycle hooks"
+        icon={<Plug className="w-4 h-4" />}
+        iconGradient="from-violet-500 to-purple-600"
+      />
 
       {/* Tabs */}
       <div className="shrink-0 border-b border-primary bg-secondary flex">
@@ -40,7 +37,7 @@ export default function ServicesApp() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors focus-ring cursor-pointer -mb-px ${
-              activeTab === tab.id ? "border-indigo-500 text-primary" : "border-transparent text-muted hover:text-primary"
+              activeTab === tab.id ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
             }`}
           >
             {tab.icon}

@@ -9,7 +9,7 @@ import Sidebar from "./components/Sidebar.tsx";
 import { SidebarProvider } from "./components/SidebarContext.tsx";
 import ToolSelector from "./components/ToolSelector.tsx";
 import TopBar from "./components/TopBar.tsx";
-import { notificationManager, ToastContainer } from "./components/ui/toast.tsx";
+import { notificationManager, ToastContainer, type ToastItem } from "./components/ui/toast.tsx";
 import AgentsApp from "./pages/apps/AgentsApp.tsx";
 import BlogApp from "./pages/apps/BlogApp.tsx";
 import CalendarApp from "./pages/apps/CalendarApp.tsx";
@@ -29,11 +29,12 @@ import VaultApp from "./pages/apps/VaultApp.tsx";
 import WorkflowsApp from "./pages/apps/WorkflowsApp.tsx";
 import ChatPage from "./pages/ChatPage.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
+import NotFoundPage from "./pages/NotFoundPage.tsx";
 import { useAgentList, useAgentTypes, useWorkflows } from "./rpc.ts";
 
 export default function App() {
   const location = useLocation();
-  const [toasts, setToasts] = useState<any[]>();
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [showLoadingBar, setShowLoadingBar] = useState(false);
   const loadingBarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -47,7 +48,7 @@ export default function App() {
     return cleanup as () => void;
   }, []);
 
-  // Show loading bar during route transitions
+  // Show loading bar during route transitions (key changes on every navigation)
   useEffect(() => {
     setShowLoadingBar(true);
     if (loadingBarTimeoutRef.current) {
@@ -61,7 +62,7 @@ export default function App() {
         clearTimeout(loadingBarTimeoutRef.current);
       }
     };
-  }, []);
+  }, [location.key]);
 
   const currentAgentId = location.pathname.startsWith("/agent/") ? location.pathname.split("/")[2] : null;
 
@@ -69,9 +70,17 @@ export default function App() {
     <SidebarProvider>
       <ChatInputProvider>
         <ErrorBoundary>
-          <ToastContainer toasts={toasts || []} onRemove={id => notificationManager.removeToast(id)} />
+          <ToastContainer toasts={toasts} onRemove={id => notificationManager.removeToast(id)} />
           {/* Route transition loading bar */}
-          {showLoadingBar && <div className="fixed top-0 left-0 right-0 h-1 bg-linear-to-r from-accent via-accent to-accent z-[100]" />}
+          {showLoadingBar && (
+            <div
+              key={location.key}
+              data-testid="route-loading-bar"
+              className="fixed top-0 left-0 right-0 h-1 bg-linear-to-r from-accent via-accent to-accent z-[100] route-loading-bar"
+              role="progressbar"
+              aria-label="Loading page"
+            />
+          )}
           <div className="flex flex-col h-dvh bg-primary/50 text-secondary antialiased font-sans selection:bg-active overflow-hidden">
             {/* Skip to main content link for accessibility */}
             <a
@@ -122,7 +131,9 @@ export default function App() {
                     <Route path="/vault" element={<VaultApp />} />
 
                     {/* Agent chat */}
-                    <Route path="/agent/:agentId/*" element={<ChatPage key={currentAgentId} agentId={currentAgentId!} />} />
+                    <Route path="/agent/:agentId/*" element={<ChatPage key={currentAgentId ?? "chat"} />} />
+
+                    <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </ErrorBoundary>
               </main>

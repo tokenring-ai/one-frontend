@@ -1,22 +1,20 @@
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Cpu } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Check,
+  Cloud,
+  Code,
+  Cpu,
+  Database,
+  GitFork,
+  Search,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  RiAlibabaCloudFill,
-  RiAnthropicFill,
-  RiCloudFill,
-  RiCodeBoxFill,
-  RiCpuFill,
-  RiDatabaseFill,
-  RiFlashlightFill,
-  RiGeminiFill,
-  RiOpenaiFill,
-  RiSearchLine,
-  RiZhihuFill,
-} from "react-icons/ri";
-import { TbArrowsSplit2, TbBrandAzure } from "react-icons/tb";
 import { chatRPCClient, useChatModelsByProvider, useModel } from "../rpc.ts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
 import { toastManager } from "./ui/toast.tsx";
@@ -28,22 +26,22 @@ interface ModelSelectorProps {
 
 // Provider icon mapping
 const providerIcons: Record<string, React.ReactNode> = {
-  anthropic: <RiAnthropicFill />,
-  azure: <TbBrandAzure />,
-  cerebras: <RiCpuFill />,
-  deepseek: <RiCodeBoxFill />,
-  google: <RiGeminiFill />,
-  groq: <RiFlashlightFill />,
-  openai: <RiOpenaiFill />,
-  openrouter: <TbArrowsSplit2 />,
-  qwen: <RiAlibabaCloudFill />,
-  xai: <RiCloudFill />,
-  zai: <RiZhihuFill />,
+  anthropic: <Sparkles className="w-3.5 h-3.5" />,
+  azure: <Cloud className="w-3.5 h-3.5" />,
+  cerebras: <Cpu className="w-3.5 h-3.5" />,
+  deepseek: <Code className="w-3.5 h-3.5" />,
+  google: <Sparkles className="w-3.5 h-3.5" />,
+  groq: <Zap className="w-3.5 h-3.5" />,
+  openai: <Bot className="w-3.5 h-3.5" />,
+  openrouter: <GitFork className="w-3.5 h-3.5" />,
+  qwen: <Cloud className="w-3.5 h-3.5" />,
+  xai: <Cloud className="w-3.5 h-3.5" />,
+  zai: <BookOpen className="w-3.5 h-3.5" />,
 };
 
 // Provider color mapping
 const providerColors: Record<string, string> = {
-  anthropic: "text-indigo-600 dark:text-indigo-400",
+  anthropic: "text-accent",
   azure: "text-blue-600 dark:text-blue-400",
   cerebras: "text-amber-600 dark:text-amber-500",
   deepseek: "text-cyan-600 dark:text-cyan-500",
@@ -82,7 +80,6 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
         setIsOpen(false);
         toastManager.success(`Model changed to ${modelId.split("/").pop()}`, { duration: 3000 });
       } catch (error) {
-        console.error("Failed to set model:", error);
         toastManager.error(errorAsString(error), { duration: 5000 });
         setIsSelecting(false);
         setSelectingModelId(null);
@@ -182,7 +179,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
             <span className="text-sm flex-1 font-mono text-muted shrink-0">Models</span>
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-2.5 flex items-center pointer-events-none">
-                <RiSearchLine className="w-4 h-4 text-muted" />
+                <Search className="w-4 h-4 text-muted" />
               </div>
               <input
                 type="text"
@@ -218,7 +215,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
             {Object.entries(groupedModels).map(([provider, models]) => {
               const isProviderExpanded = expandedProviders.has(provider);
               const providerCode = models.length > 0 ? models[0]?.modelName.replace(/:.*/, "") : "unknown";
-              const providerIcon = providerIcons[providerCode] || <RiDatabaseFill />;
+              const providerIcon = providerIcons[providerCode] || <Database className="w-3.5 h-3.5" />;
               const providerColor = providerColors[providerCode] || providerColors.default;
 
               return (
@@ -304,7 +301,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
                               <div
                                 className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${
                                   currentModelData?.model === model.modelId
-                                    ? "bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.5)]"
+                                    ? "bg-accent shadow-[0_0_6px_rgba(99,102,241,0.5)]"
                                     : model.available
                                       ? "bg-emerald-500"
                                       : "bg-muted/50"
@@ -313,7 +310,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
                               <span
                                 className={`flex-1 text-xs font-mono leading-tight truncate ${
                                   currentModelData?.model === model.modelId
-                                    ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                                    ? "text-accent font-medium"
                                     : isFocused
                                       ? "text-primary font-medium"
                                       : "text-muted group-hover:text-primary"
@@ -322,9 +319,9 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
                                 {model.modelName}
                               </span>
                               {isSelecting && selectingModelId === model.modelId ? (
-                                <Cpu className="w-3 h-3 text-indigo-400 ml-2 shrink-0 animate-spin" aria-label="Selecting..." />
+                                <Cpu className="w-3 h-3 text-accent-soft ml-2 shrink-0 animate-spin" aria-label="Selecting..." />
                               ) : currentModelData?.model === model.modelId ? (
-                                <Check className="w-3 h-3 text-indigo-400 ml-2 shrink-0" aria-label="Currently selected" />
+                                <Check className="w-3 h-3 text-accent-soft ml-2 shrink-0" aria-label="Currently selected" />
                               ) : null}
                             </div>
                           );

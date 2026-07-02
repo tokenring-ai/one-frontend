@@ -88,7 +88,7 @@ export default function ResizableSplit({
   const handleClass = [
     "group shrink-0 relative flex items-center justify-center select-none transition-colors",
     isVertical ? "w-full cursor-row-resize" : "h-full cursor-col-resize",
-    dragging ? "bg-indigo-500/25" : "bg-secondary hover:bg-indigo-500/15",
+    dragging ? "bg-accent-muted-hover" : "bg-secondary hover:bg-accent-muted",
   ].join(" ");
 
   const handleSizeStyle: React.CSSProperties = isVertical ? { height: HANDLE_PX } : { width: HANDLE_PX };
@@ -129,7 +129,7 @@ export default function ResizableSplit({
               className={[
                 "rounded-full transition-colors",
                 isVertical ? "w-5 h-[3px]" : "w-[3px] h-5",
-                dragging ? "bg-indigo-400" : "bg-muted/50 group-hover:bg-indigo-400/70",
+                dragging ? "bg-accent-soft" : "bg-muted/50 group-hover:bg-accent-soft/70",
               ].join(" ")}
             />
           ))}

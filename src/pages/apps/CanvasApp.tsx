@@ -1,11 +1,15 @@
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import Editor from "@monaco-editor/react";
 import { Loader2, PenTool, Play, Plus, Save, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AgentLauncherBar from "../../components/AgentLauncherBar.tsx";
 import ChatPanel from "../../components/chat/ChatPanel.tsx";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useOwnedAgent } from "../../hooks/useOwnedAgent.ts";
+import { sanitizeCanvasHtml } from "../../lib/sanitizeHtml.ts";
 import { useTheme } from "../../hooks/useTheme.ts";
 import { agentRPCClient, filesystemRPCClient, useFilesystemProviders } from "../../rpc.ts";
 
@@ -112,7 +116,7 @@ function SaveAsModal({
                 if (e.key === "Escape") onClose();
               }}
               placeholder="pages/index.html"
-              className="w-full bg-input border border-primary rounded-lg px-3 py-2 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full bg-input border border-primary rounded-lg px-3 py-2 text-xs text-primary placeholder-muted focus-accent"
             />
           </div>
           <div className="flex gap-2 pt-1">
@@ -127,7 +131,7 @@ function SaveAsModal({
               type="button"
               onClick={handleSubmit}
               disabled={!path.trim() || !provider || saving}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors focus-ring cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg transition-colors focus-ring cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save
@@ -156,7 +160,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
 
   const initialContent = fileState?.fileContent ?? DEFAULT_HTML;
   const [htmlContent, setHtmlContent] = useState(initialContent);
-  const [previewHtml, setPreviewHtml] = useState(initialContent);
+  const [previewSource, setPreviewSource] = useState(initialContent);
   const [autoPreview, setAutoPreview] = useState(true);
 
   // Save state
@@ -166,9 +170,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveAs, setShowSaveAs] = useState(false);
 
-  // Agent state
-  const [agentId, setAgentId] = useState<string | null>(null);
-  const ownedAgentRef = useRef<string | null>(null);
+  const { agentId, assignAgent: handleAgentLaunched } = useOwnedAgent("Canvas app");
 
   const isDirty = htmlContent !== savedContent;
   const providers = fsProviders.data?.providers ?? [];
@@ -180,7 +182,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
     setHtmlContent(newVal);
     if (autoPreview) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => setPreviewHtml(newVal), 400);
+      debounceRef.current = setTimeout(() => setPreviewSource(newVal), 400);
     }
   };
 
@@ -190,21 +192,6 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
     },
     [],
   );
-
-  // Clean up owned agent on unmount
-  useEffect(() => {
-    return () => {
-      if (ownedAgentRef.current) {
-        agentRPCClient.deleteAgent({ agentId: ownedAgentRef.current, reason: "Canvas app unmounted" }).catch(() => {});
-        ownedAgentRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleAgentLaunched = useCallback((id: string) => {
-    ownedAgentRef.current = id;
-    setAgentId(id);
-  }, []);
 
   const handleSave = useCallback(async () => {
     if (!currentFilePath || !currentProvider) {
@@ -216,8 +203,8 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
       await filesystemRPCClient.writeFile({ path: currentFilePath, content: htmlContent, provider: currentProvider });
       setSavedContent(htmlContent);
       toastManager.success("Saved", { duration: 2000 });
-    } catch (e: any) {
-      toastManager.error(e.message || "Save failed", { duration: 4000 });
+    } catch (e: unknown) {
+      toastManager.error(errorAsString(e), { duration: 4000 });
     } finally {
       setIsSaving(false);
     }
@@ -247,7 +234,9 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
     return () => window.removeEventListener("keydown", handler);
   }, [handleSave]);
 
-  const runPreview = () => setPreviewHtml(htmlContent);
+  const runPreview = () => setPreviewSource(htmlContent);
+
+  const previewHtml = useMemo(() => sanitizeCanvasHtml(previewSource), [previewSource]);
 
   return (
     <div className="w-full h-full flex flex-col bg-primary overflow-hidden">
@@ -255,22 +244,13 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
         <SaveAsModal providers={providers} initialPath={currentFilePath ?? "index.html"} onSave={handleSaveAs} onClose={() => setShowSaveAs(false)} />
       )}
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 py-2 flex items-center gap-2.5">
-        <div className="w-6 h-6 rounded-md bg-linear-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-sm shrink-0">
-          <PenTool className="w-3.5 h-3.5 text-white" />
-        </div>
-        <h1 className="text-sm font-semibold text-primary shrink-0">Canvas</h1>
-
-        <div className="flex-1" />
-
-        {/* Auto-preview toggle */}
+      <AppPageHeader title="Canvas" icon={<PenTool className="w-4 h-4" />} iconGradient="from-purple-500 to-violet-600" size="compact">
         <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
           <input
             type="checkbox"
             checked={autoPreview}
             onChange={e => setAutoPreview(e.target.checked)}
-            className="w-3.5 h-3.5 accent-indigo-500 cursor-pointer"
+            className="w-3.5 h-3.5 accent-control cursor-pointer"
           />
           <span className="text-2xs text-muted select-none">Auto-preview</span>
         </label>
@@ -320,13 +300,13 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
           type="button"
           onClick={() => {
             setHtmlContent(DEFAULT_HTML);
-            setPreviewHtml(DEFAULT_HTML);
+            setPreviewSource(DEFAULT_HTML);
             setSavedContent(DEFAULT_HTML);
             setCurrentFilePath(null);
             setCurrentProvider(null);
           }}
           title="New canvas"
-          className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-500 dark:text-indigo-400 text-xs font-medium rounded-lg transition-colors cursor-pointer focus-ring shrink-0"
+          className="flex items-center gap-1.5 px-2.5 py-1 bg-accent-muted hover:bg-accent-muted-hover text-accent text-xs font-medium rounded-lg transition-colors cursor-pointer focus-ring shrink-0"
         >
           <Plus className="w-3 h-3" />
           New
@@ -343,7 +323,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
             onLaunch={handleAgentLaunched}
           />
         )}
-      </div>
+      </AppPageHeader>
 
       {/* ── Vertical split: editor+preview (top) | agent chat (bottom) ──── */}
       {agentId ? (
@@ -408,7 +388,13 @@ function EditorPreviewPane({
           <span className="text-2xs font-mono font-semibold text-muted uppercase tracking-wider">Preview</span>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/70 shrink-0" />
         </div>
-        <iframe className="flex-1 w-full bg-white border-0" srcDoc={previewHtml} sandbox="allow-scripts allow-same-origin" title="Canvas preview" />
+        <iframe
+          className="flex-1 w-full bg-white border-0"
+          srcDoc={previewHtml}
+          sandbox="allow-scripts"
+          referrerPolicy="no-referrer"
+          title="Canvas preview"
+        />
       </div>
     </ResizableSplit>
   );

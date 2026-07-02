@@ -18,6 +18,8 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CheckpointBrowser from "../components/CheckpointBrowser.tsx";
 import AppCard, { type AppCardDef } from "../components/dashboard/AppCard.tsx";
@@ -70,7 +72,7 @@ const APPS: AppCardDef[] = [
     label: "Files",
     description: "Browse and manage your filesystem",
     icon: <FolderOpen />,
-    gradient: "from-indigo-500 to-blue-600",
+    gradient: "from-accent to-blue-600",
   },
   {
     id: "terminal",
@@ -118,7 +120,7 @@ const APPS: AppCardDef[] = [
     label: "Social",
     description: "Connect Reddit, Discord, Slack, Telegram, and X",
     icon: <Share2 />,
-    gradient: "from-blue-500 to-indigo-600",
+    gradient: "from-blue-500 to-accent-hover",
   },
   {
     id: "messaging",
@@ -166,10 +168,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const agents = useAgentList();
   const activeCount = agents.data?.length ?? 0;
+  const showAgentBadge = !agents.isLoading && !agents.error && activeCount > 0;
 
   // Inject live badges
   const appsWithBadges = APPS.map(app => {
-    if (app.id === "agents" && activeCount > 0) {
+    if (app.id === "agents" && showAgentBadge) {
       return { ...app, badge: String(activeCount) };
     }
     return app;
@@ -188,17 +191,33 @@ export default function Dashboard() {
           {/* Live status bar */}
           <div className="flex items-center gap-4 px-4 py-3 bg-secondary border border-primary rounded-xl shadow-sm">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${activeCount > 0 ? "bg-amber-500 animate-pulse" : "bg-tertiary"}`} />
-              <span className="text-xs text-primary font-medium">
-                {activeCount} active {activeCount === 1 ? "agent" : "agents"}
-              </span>
+              {agents.isLoading ? (
+                <>
+                  <Loader2 className="w-3 h-3 text-muted animate-spin" />
+                  <span className="text-xs text-muted">Loading agents…</span>
+                </>
+              ) : agents.error ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-warning" />
+                  <span className="text-xs text-warning" title={errorAsString(agents.error)}>
+                    Unable to load agents
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className={`w-2 h-2 rounded-full ${activeCount > 0 ? "bg-amber-500 animate-pulse" : "bg-tertiary"}`} />
+                  <span className="text-xs text-primary font-medium">
+                    {activeCount} active {activeCount === 1 ? "agent" : "agents"}
+                  </span>
+                </>
+              )}
             </div>
             <div className="w-px h-4 bg-primary" />
             <div className="flex-1" />
             <button
               type="button"
               onClick={() => navigate("/agents")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors focus-ring shadow-button-primary"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors focus-ring shadow-button-primary"
             >
               <User className="w-3.5 h-3.5" />
               New Agent

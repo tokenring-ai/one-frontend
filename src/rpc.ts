@@ -11,6 +11,7 @@ import EmailRpcSchema from "@tokenring-ai/email/rpc/schema";
 import FileSystemRpcSchema from "@tokenring-ai/filesystem/rpc/schema";
 import ImageGenerationRpcSchema from "@tokenring-ai/image/rpc/schema";
 import LifecycleRpcSchema from "@tokenring-ai/lifecycle/rpc/schema";
+import MediaLibraryRpcSchema from "@tokenring-ai/media-library/rpc/schema";
 import NewsRPMRpcSchema from "@tokenring-ai/newsrpm/rpc/schema";
 import type { IndexedDataSearch } from "@tokenring-ai/newsrpm/schema";
 import TasksRpcSchema from "@tokenring-ai/tasks/rpc/schema";
@@ -21,9 +22,11 @@ import VaultRpcSchema from "@tokenring-ai/vault/rpc/schema";
 import VideoRpcSchema from "@tokenring-ai/video/rpc/schema";
 import createWsRPCClient from "@tokenring-ai/web-host/createWsRPCClient";
 import WorkflowRpcSchema from "@tokenring-ai/workflow/rpc/schema";
+import { useEffect, useRef } from "react";
 import useSWR, { Fetcher, Key, SWRConfiguration, SWRResponse } from "swr";
+import { useAgentStatusStream, useRPCStreamSWR } from "./hooks/useRPCStreamSWR.ts";
 
-export function useTypedSWR<Data = any, Err extends Error = Error, SWRKey extends Key = Key>(
+export function useTypedSWR<Data = unknown, Err extends Error = Error, SWRKey extends Key = Key>(
   key: SWRKey,
   fetcher: Fetcher<Data, SWRKey> | null,
   config?: SWRConfiguration<Data, Err, Fetcher<Data, SWRKey>>
@@ -46,6 +49,7 @@ export const chatRPCClient = createWsRPCClient(baseURL, ChatRpcSchema);
 export const checkpointRPCClient = createWsRPCClient(baseURL, CheckpointRpcSchema);
 export const filesystemRPCClient = createWsRPCClient(baseURL, FileSystemRpcSchema);
 export const lifecycleRPCClient = createWsRPCClient(baseURL, LifecycleRpcSchema);
+export const mediaLibraryRPCClient = createWsRPCClient(baseURL, MediaLibraryRpcSchema);
 export const workflowRPCClient = createWsRPCClient(baseURL, WorkflowRpcSchema);
 export const calendarRPCClient = createWsRPCClient(baseURL, CalendarRpcSchema);
 export const emailRPCClient = createWsRPCClient(baseURL, EmailRpcSchema);
@@ -68,16 +72,21 @@ export function useCommandHistory(agentId: string) {
 }
 
 export function useAgentList() {
-  return useTypedSWR("/agent/listAgents", () => agentRPCClient.listAgents({}), { refreshInterval: 1000 });
+  return useRPCStreamSWR({
+    key: "agents",
+    subscribe: signal => agentRPCClient.streamAgents({}, signal),
+  });
 }
 
 export function useTerminalList(agentId?: string) {
-  const key = agentId ? `/terminal/list/${agentId}` : "/terminal/list";
-  return useTypedSWR(key, () => (agentId ? terminalRPCClient.listTerminals({ agentId }) : terminalRPCClient.listTerminals({})), { refreshInterval: 1200 });
+  return useRPCStreamSWR({
+    key: agentId ? `terminals:${agentId}` : "terminals",
+    subscribe: signal => terminalRPCClient.streamTerminals(stripUndefinedKeys({ agentId }), signal),
+  });
 }
 
 export function useModel(agentId: string) {
-  return useTypedSWR(agentId ? `/chat/model/${agentId}` : null, () => chatRPCClient.getModel({ agentId }), { refreshInterval: 15000 });
+  return useAgentStatusStream(agentId ? `model:${agentId}` : null, signal => chatRPCClient.streamModel({ agentId }, signal));
 }
 
 export function useAgentTypes() {
@@ -93,7 +102,9 @@ export function useFilesystemProviders() {
 }
 
 export function useFilesystemState(agentId: string | undefined) {
-  return useTypedSWR(agentId ? `/agent/${agentId}/filesystemState` : null, () => filesystemRPCClient.getFilesystemState({ agentId: agentId! }), { refreshInterval: 3000 });
+  return useAgentStatusStream(agentId ? `filesystem:${agentId}` : null, signal =>
+    filesystemRPCClient.streamFilesystemState({ agentId: agentId! }, signal),
+  );
 }
 
 export function useDirectoryListing(opts?: { path: string; showHidden?: boolean; provider: string }) {
@@ -106,7 +117,6 @@ export function useDirectoryListing(opts?: { path: string; showHidden?: boolean;
         showHidden: opts!.showHidden ?? false,
         provider: opts!.provider,
       }),
-    { refreshInterval: 5000 },
   );
 }
 
@@ -126,7 +136,7 @@ export function useAvailableTools() {
 }
 
 export function useEnabledTools(agentId: string) {
-  return useTypedSWR(agentId ? `/chat/getEnabledTools/${agentId}` : null, () => chatRPCClient.getEnabledTools({ agentId }), { refreshInterval: 5000 });
+  return useAgentStatusStream(agentId ? `enabled-tools:${agentId}` : null, signal => chatRPCClient.streamEnabledTools({ agentId }, signal));
 }
 
 export function useAvailableHooks() {
@@ -134,15 +144,24 @@ export function useAvailableHooks() {
 }
 
 export function useEnabledHooks(agentId: string) {
-  return useTypedSWR(agentId ? `/lifecycle/getEnabledHooks/${agentId}` : null, () => lifecycleRPCClient.getEnabledHooks({ agentId }), { refreshInterval: 5000 });
+  return useAgentStatusStream(agentId ? `enabled-hooks:${agentId}` : null, signal => lifecycleRPCClient.streamEnabledHooks({ agentId }, signal));
 }
 
 export function useAvailableSubAgents(agentId: string) {
-  return useTypedSWR(agentId ? `/agent/getAvailableSubAgents/${agentId}` : null, () => agentRPCClient.getAgentTypes({}).then(agents => ({ agents })));
+  return useTypedSWR(agentId ? `/tasks/getAvailableSubAgents/${agentId}` : null, async () => {
+    const result = await tasksRPCClient.getAvailableSubAgents({ agentId });
+    if (result.status === "success") {
+      return { agents: result.agents };
+    }
+    if (result.status === "agentNotFound") {
+      throw new Error(`Agent not found: ${agentId}`);
+    }
+    return { agents: [] };
+  });
 }
 
 export function useEnabledSubAgents(agentId: string) {
-  return useTypedSWR(agentId ? `/tasks/getEnabledSubAgents/${agentId}` : null, () => tasksRPCClient.getEnabledSubAgents({ agentId }), { refreshInterval: 5000 });
+  return useAgentStatusStream(agentId ? `enabled-sub-agents:${agentId}` : null, signal => tasksRPCClient.streamEnabledSubAgents({ agentId }, signal));
 }
 
 export function useStockQuote(symbols: string[]) {
@@ -185,12 +204,32 @@ export function usePlugins() {
   return useTypedSWR("/app/listPlugins", () => appRPCClient.listPlugins({}));
 }
 
-export function useAppLogs() {
-  return useTypedSWR("/app/getLogs", () => appRPCClient.getLogs({}), { refreshInterval: 2000 });
+export function useAppLogs(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false;
+  const positionRef = useRef(0);
+
+  useEffect(() => {
+    if (enabled) {
+      positionRef.current = 0;
+    }
+  }, [enabled]);
+
+  return useRPCStreamSWR({
+    key: enabled ? "app-logs" : null,
+    initialData: () => ({ logs: [] as Array<{ timestamp: number; level: "info" | "error"; message: string }> }),
+    subscribe: signal => appRPCClient.streamLogs({ fromPosition: positionRef.current }, signal),
+    reduce: (prev, chunk) => {
+      positionRef.current = chunk.position;
+      return { logs: [...(prev?.logs ?? []), ...chunk.logs] };
+    },
+  });
 }
 
 export function useCheckpointList() {
-  return useTypedSWR("/checkpoint/listCheckpoints", () => checkpointRPCClient.listCheckpoints({}), { refreshInterval: 5000 });
+  return useRPCStreamSWR({
+    key: "checkpoints",
+    subscribe: signal => checkpointRPCClient.streamCheckpoints({}, signal),
+  });
 }
 
 export function useBlogPosts(provider: string | undefined, status: "all" | "draft" | "published" = "all", limit = 50) {
@@ -208,7 +247,7 @@ export function useBlogState(agentId: string | undefined) {
 }
 
 export function useCalendarProviders() {
-  return useTypedSWR("/calendar/getCalendarProviders", () => calendarRPCClient.getCalendarProviders({}), { refreshInterval: 10000 });
+  return useTypedSWR("/calendar/getCalendarProviders", () => calendarRPCClient.getCalendarProviders({}));
 }
 
 export function useCalendarEvents(provider: string | undefined, from: string, to: string) {
@@ -220,11 +259,11 @@ export function useCalendarEvents(provider: string | undefined, from: string, to
 }
 
 export function useEmailProviders() {
-  return useTypedSWR("/email/getEmailProviders", () => emailRPCClient.getEmailProviders({}), { refreshInterval: 10000 });
+  return useTypedSWR("/email/getEmailProviders", () => emailRPCClient.getEmailProviders({}));
 }
 
 export function useEmailBoxes(provider: string | undefined) {
-  return useTypedSWR(provider ? `/email/getEmailBoxes/${provider}` : null, () => emailRPCClient.getEmailBoxes({ provider: provider! }), { refreshInterval: 30000 });
+  return useTypedSWR(provider ? `/email/getEmailBoxes/${provider}` : null, () => emailRPCClient.getEmailBoxes({ provider: provider! }));
 }
 
 export function useEmailMessages(
@@ -265,12 +304,18 @@ export function useEmailMessage(provider: string | undefined, messageId: string 
 }
 
 export function useVaultKeys() {
-  return useTypedSWR("/vault/listEntries", () => vaultRPCClient.listEntries({}), { refreshInterval: 10000 });
+  return useRPCStreamSWR({
+    key: "vault-entries",
+    subscribe: signal => vaultRPCClient.streamEntries({}, signal),
+  });
 }
 
 export function useImages(search?: string, limit?: number) {
-  const key = search ? `/image/getImages/${search}/${limit ?? 200}` : `/image/getImages/${limit ?? 200}`;
-  return useTypedSWR(key, () => imageGenerationRPCClient.getImages(stripUndefinedKeys({ search, limit })), { refreshInterval: 10000 });
+  const key = search ? `images:${search}:${limit ?? 200}` : `images:${limit ?? 200}`;
+  return useRPCStreamSWR({
+    key,
+    subscribe: signal => mediaLibraryRPCClient.streamImages(stripUndefinedKeys({ search, limit }), signal),
+  });
 }
 
 export function useImageGenerationModels() {
@@ -278,8 +323,11 @@ export function useImageGenerationModels() {
 }
 
 export function useVideos(search?: string, limit?: number) {
-  const key = search ? `/video/getVideos/${search}/${limit ?? 200}` : `/video/getVideos/${limit ?? 200}`;
-  return useTypedSWR(key, () => videoGenerationRPCClient.getVideos(stripUndefinedKeys({ search, limit })), { refreshInterval: 10000 });
+  const key = search ? `videos:${search}:${limit ?? 200}` : `videos:${limit ?? 200}`;
+  return useRPCStreamSWR({
+    key,
+    subscribe: signal => mediaLibraryRPCClient.streamVideos(stripUndefinedKeys({ search, limit }), signal),
+  });
 }
 
 export function useVideoGenerationModels() {
@@ -287,8 +335,11 @@ export function useVideoGenerationModels() {
 }
 
 export function useAudios(search?: string, limit?: number) {
-  const key = search ? `/audio/getAudios/${search}/${limit ?? 200}` : `/audio/getAudios/${limit ?? 200}`;
-  return useTypedSWR(key, () => audioRPCClient.getAudios(stripUndefinedKeys({ search, limit })), { refreshInterval: 10000 });
+  const key = search ? `audios:${search}:${limit ?? 200}` : `audios:${limit ?? 200}`;
+  return useRPCStreamSWR({
+    key,
+    subscribe: signal => mediaLibraryRPCClient.streamAudios(stripUndefinedKeys({ search, limit }), signal),
+  });
 }
 
 export function useSpeechModels() {

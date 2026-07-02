@@ -1,18 +1,36 @@
-# TokenRing Coder Web Frontend
+# TokenRing One Frontend (`@tokenring-ai/one-frontend`)
 
-React-based web interface for TokenRing agents with CLI-style chat.
+React web interface for TokenRing agents with CLI-style chat, app pages, and real-time agent streaming.
 
 ## Development
 
+From the monorepo root:
+
 ```bash
-npm install
-npm run dev
+bun install
+cd frontend/one
+bun run dev
 ```
+
+Or from `frontend/one` after dependencies are installed:
+
+```bash
+bun run dev
+```
+
+The Vite dev server runs on port 5173 by default. In production, built assets in `dist/` are served by the WebFrontendServer.
 
 ## Build
 
 ```bash
-npm run build
+bun run build
+bun run preview   # optional: preview production build locally
 ```
 
-The built files will be in `dist/` and served automatically by the WebFrontendServer.
+## Test
+
+```bash
+bun run test
+bun run test:watch
+bun run test:coverage
+```

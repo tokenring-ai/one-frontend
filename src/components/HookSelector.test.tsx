@@ -1,27 +1,50 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-// Import the mocked functions after the mock declaration
-import { useAvailableHooks, useEnabledHooks } from "../rpc";
+import { useAvailableHooks, useEnabledHooks } from "../rpc.ts";
 import HookSelector from "./HookSelector";
 
-// Mock the RPC module
+const { enableHooksMock, disableHooksMock, toastErrorMock } = vi.hoisted(() => ({
+  enableHooksMock: vi.fn(),
+  disableHooksMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+}));
+
 vi.mock("../rpc.ts", () => ({
   lifecycleRPCClient: {
-    enableHooks: vi.fn(),
-    disableHooks: vi.fn(),
+    enableHooks: enableHooksMock,
+    disableHooks: disableHooksMock,
   },
   useAvailableHooks: vi.fn(),
   useEnabledHooks: vi.fn(),
 }));
 
+vi.mock("./ui/toast.tsx", () => ({
+  toastManager: {
+    error: toastErrorMock,
+  },
+}));
+
 describe("HookSelector", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    enableHooksMock.mockResolvedValue({});
+    disableHooksMock.mockResolvedValue({});
   });
 
-  const setup = (availableHooks: Record<string, any> = {}, enabledHooks: string[] = []) => {
-    (useAvailableHooks as any).mockReturnValue({ data: { hooks: availableHooks } });
-    (useEnabledHooks as any).mockReturnValue({ data: { hooks: enabledHooks }, mutate: vi.fn() });
+  const setup = (availableHooks: Record<string, unknown> = {}, enabledHooks: string[] = [], mutate = vi.fn()) => {
+    (useAvailableHooks as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { hooks: availableHooks },
+      isLoading: false,
+      error: undefined,
+    });
+    (useEnabledHooks as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { status: "success", hooks: enabledHooks },
+      mutate,
+      isLoading: false,
+      error: undefined,
+    });
+    return { mutate };
   };
 
   it("renders the hook selector button with accurate hook count", () => {
@@ -55,6 +78,7 @@ describe("HookSelector", () => {
   });
 
   it("filters hooks based on search query", async () => {
+    const user = userEvent.setup();
     const availableHooks = {
       "file-hooks": { displayName: "File Hooks", description: "File system operations" },
       "memory-hooks": { displayName: "Memory Hooks", description: "Memory management" },
@@ -65,9 +89,8 @@ describe("HookSelector", () => {
 
     render(<HookSelector agentId="test-agent" triggerVariant="icon" />);
 
-    // Open the dropdown
     const button = screen.getByRole("button");
-    button.click();
+    await user.click(button);
 
     await waitFor(() => {
       expect(screen.getByText("File Hooks")).toBeInTheDocument();
@@ -75,11 +98,9 @@ describe("HookSelector", () => {
       expect(screen.getByText("Git Hooks")).toBeInTheDocument();
     });
 
-    // Type search query
     const searchInput = screen.getByPlaceholderText("Filter hooks...");
-    fireEvent.change(searchInput, { target: { value: "git" } });
+    await user.type(searchInput, "git");
 
-    // Should only show git hooks
     await waitFor(() => {
       expect(screen.queryByText("File Hooks")).not.toBeInTheDocument();
       expect(screen.queryByText("Memory Hooks")).not.toBeInTheDocument();
@@ -88,6 +109,7 @@ describe("HookSelector", () => {
   });
 
   it("clears search when clear button is clicked", async () => {
+    const user = userEvent.setup();
     const availableHooks = {
       "file-hooks": { displayName: "File Hooks", description: "File system operations" },
     };
@@ -96,27 +118,22 @@ describe("HookSelector", () => {
 
     render(<HookSelector agentId="test-agent" triggerVariant="icon" />);
 
-    // Open the dropdown
     const button = screen.getByRole("button");
-    button.click();
+    await user.click(button);
 
     await waitFor(() => {
       expect(screen.getByText("File Hooks")).toBeInTheDocument();
     });
 
-    // Type search query
     const searchInput = screen.getByPlaceholderText("Filter hooks...");
-    fireEvent.change(searchInput, { target: { value: "nonexistent" } });
+    await user.type(searchInput, "nonexistent");
 
     await waitFor(() => {
       expect(screen.getByText(/No hooks found matching/)).toBeInTheDocument();
     });
 
-    // Click clear button
-    const clearButton = screen.getByLabelText("Clear search");
-    fireEvent.click(clearButton);
+    await user.click(screen.getByLabelText("Clear search"));
 
-    // Search should be cleared and original hooks shown
     await waitFor(() => {
       expect(searchInput).toHaveValue("");
       expect(screen.getByText("File Hooks")).toBeInTheDocument();
@@ -124,6 +141,7 @@ describe("HookSelector", () => {
   });
 
   it("navigates through hooks with keyboard arrow keys", async () => {
+    const user = userEvent.setup();
     const availableHooks = {
       "file-hooks": { displayName: "File Hooks", description: "File system operations" },
       "memory-hooks": { displayName: "Memory Hooks", description: "Memory management" },
@@ -134,67 +152,80 @@ describe("HookSelector", () => {
 
     render(<HookSelector agentId="test-agent" triggerVariant="icon" />);
 
-    // Open the dropdown
     const button = screen.getByRole("button");
-    button.click();
+    await user.click(button);
 
     await waitFor(() => {
       expect(screen.getByText("File Hooks")).toBeInTheDocument();
     });
 
-    // Get the first hook item and focus it
     const firstHook = screen.getByText("File Hooks").closest('[role="option"]');
     const secondHook = screen.getByText("Memory Hooks").closest('[role="option"]');
+    expect(firstHook).toBeTruthy();
+    expect(secondHook).toBeTruthy();
 
-    if (firstHook) {
-      firstHook.focus();
+    firstHook!.focus();
+    await act(async () => {
+      fireEvent.keyDown(firstHook!, { key: "ArrowDown", code: "ArrowDown" });
+    });
 
-      // Simulate ArrowDown key press
-      fireEvent.keyDown(firstHook, { key: "ArrowDown", code: "ArrowDown" });
-
-      // Second hook should now be focused (visually highlighted with bg-hover and focus ring)
+    await waitFor(() => {
       expect(secondHook).toHaveClass("bg-hover");
       expect(secondHook).toHaveClass("focus-ring");
-    }
+    });
   });
 
   it("toggles hook with Enter key", async () => {
-    const mockMutate = vi.fn();
-    (useEnabledHooks as any).mockReturnValue({
-      data: { hooks: [] },
-      mutate: mockMutate,
-    });
-    (useAvailableHooks as any).mockReturnValue({
-      data: {
-        hooks: {
-          "file-hooks": { displayName: "File Hooks", description: "File system operations" },
-        },
+    const user = userEvent.setup();
+    const { mutate } = setup(
+      {
+        "file-hooks": { displayName: "File Hooks", description: "File system operations" },
       },
-    });
+      [],
+    );
 
     render(<HookSelector agentId="test-agent" triggerVariant="icon" />);
 
-    // Open the dropdown
     const button = screen.getByRole("button");
-    button.click();
+    await user.click(button);
 
     await waitFor(() => {
       expect(screen.getByText("File Hooks")).toBeInTheDocument();
     });
 
-    // Get the hook item and focus it
     const hookItem = screen.getByText("File Hooks").closest('[role="option"]');
+    expect(hookItem).toBeTruthy();
+    hookItem!.focus();
 
-    if (hookItem) {
-      hookItem.focus();
+    await act(async () => {
+      fireEvent.keyDown(hookItem!, { key: "Enter", code: "Enter" });
+    });
 
-      // Simulate Enter key press
-      fireEvent.keyDown(hookItem, { key: "Enter", code: "Enter" });
+    await waitFor(() => {
+      expect(enableHooksMock).toHaveBeenCalledWith({ agentId: "test-agent", hooks: ["file-hooks"] });
+      expect(mutate).toHaveBeenCalled();
+    });
+  });
 
-      // Verify toggle was called
-      await waitFor(() => {
-        expect(mockMutate).toHaveBeenCalled();
-      });
-    }
+  it("shows a toast when hook toggle fails", async () => {
+    const user = userEvent.setup();
+    enableHooksMock.mockRejectedValueOnce(new Error("RPC unavailable"));
+    setup({
+      "file-hooks": { displayName: "File Hooks", description: "File system operations" },
+    });
+
+    render(<HookSelector agentId="test-agent" triggerVariant="icon" />);
+    await user.click(screen.getByRole("button", { name: /Select hooks/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("File Hooks")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("option", { name: /File Hooks/i }));
+
+    await waitFor(() => {
+      expect(enableHooksMock).toHaveBeenCalled();
+      expect(toastErrorMock).toHaveBeenCalledWith(expect.stringContaining("RPC unavailable"), { duration: 5000 });
+    });
   });
 });

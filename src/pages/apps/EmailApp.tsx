@@ -19,12 +19,13 @@ import {
   WifiOff,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AgentLauncherBar from "../../components/AgentLauncherBar.tsx";
 import ChatPanel from "../../components/chat/ChatPanel.tsx";
 import FilterTabs, { type FilterTabOption } from "../../components/ui/FilterTabs.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { cn } from "../../lib/utils.ts";
+import { useLazyAgent } from "../../hooks/useLazyAgent.ts";
 import { agentRPCClient, emailRPCClient, useEmailBoxes, useEmailMessage, useEmailMessages, useEmailProviders, useEmailSearch } from "../../rpc.ts";
 
 const BOX_META = {
@@ -597,9 +598,11 @@ export default function EmailApp() {
   const providers = useEmailProviders();
   const [provider, setProvider] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  const [agentId, setAgentId] = useState<string | null>(null);
-  const ownedAgentRef = useRef<string | null>(null);
-  const agentStartPromiseRef = useRef<Promise<string | null> | null>(null);
+  const { agentId, ensureAgent, assignAgent: handleAgentLaunched } = useLazyAgent({
+    appName: "Email app",
+    agentType: "email",
+    headless: false,
+  });
 
   useEffect(() => {
     const availableProviders = providers.data?.providers ?? [];
@@ -609,36 +612,6 @@ export default function EmailApp() {
       setSelectedMessageId(null);
     }
   }, [providers.data, provider]);
-
-  useEffect(() => {
-    return () => {
-      if (ownedAgentRef.current) {
-        agentRPCClient.deleteAgent({ agentId: ownedAgentRef.current, reason: "Email app unmounted" }).catch(() => {});
-        ownedAgentRef.current = null;
-      }
-    };
-  }, []);
-
-  const ensureAgent = useCallback(() => {
-    if (agentId) return agentId;
-    if (agentStartPromiseRef.current) return agentStartPromiseRef.current;
-
-    const startPromise = (async () => {
-      try {
-        const { id } = await agentRPCClient.createAgent({ agentType: "email", headless: false });
-        ownedAgentRef.current = id;
-        setAgentId(id);
-        return id;
-      } catch {
-        return null;
-      } finally {
-        agentStartPromiseRef.current = null;
-      }
-    })();
-
-    agentStartPromiseRef.current = startPromise;
-    return startPromise;
-  }, [agentId]);
 
   useEffect(() => {
     if (!agentId || (!provider && !selectedMessageId)) return;
@@ -659,11 +632,6 @@ export default function EmailApp() {
     },
     [ensureAgent],
   );
-
-  const handleAgentLaunched = useCallback((id: string) => {
-    ownedAgentRef.current = id;
-    setAgentId(id);
-  }, []);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-primary">

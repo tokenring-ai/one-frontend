@@ -1,4 +1,5 @@
 import { Moon, Settings, Sun } from "lucide-react";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { useSidebar } from "../../components/SidebarContext.tsx";
 import { useTheme } from "../../hooks/useTheme.ts";
 
@@ -8,16 +9,12 @@ export default function SettingsApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
-      {/* App header */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-linear-to-br from-stone-500 to-gray-600 flex items-center justify-center shadow-sm">
-          <Settings className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-primary">Settings</h1>
-          <p className="text-2xs text-muted">Configure your TokenRing preferences</p>
-        </div>
-      </div>
+      <AppPageHeader
+        title="Settings"
+        subtitle="Configure your TokenRing preferences"
+        icon={<Settings className="w-4 h-4" />}
+        iconGradient="from-stone-500 to-gray-600"
+      />
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -69,7 +66,7 @@ export default function SettingsApp() {
                   type="button"
                   onClick={toggleSidebar}
                   className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-ring ${
-                    isSidebarExpanded ? "bg-indigo-600" : "bg-tertiary"
+                    isSidebarExpanded ? "bg-accent" : "bg-tertiary"
                   }`}
                   role="switch"
                   aria-checked={isSidebarExpanded}

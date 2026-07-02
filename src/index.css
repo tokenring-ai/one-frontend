@@ -17,6 +17,9 @@
   --bg-input: #ffffff;
   --border-primary: #e7e5e4;
   --accent-primary: #6366f1;
+  --accent-primary-hover: #818cf8;
+  --accent-primary-soft: #818cf8;
+  --text-on-accent: #ffffff;
   --text-primary: #1c1917;
   --text-secondary: #44403c;
   --text-muted: #78716c;
@@ -35,6 +38,9 @@
   --bg-input: #1a1a1a;
   --border-primary: #444;
   --accent-primary: #6366f1;
+  --accent-primary-hover: #a5b4fc;
+  --accent-primary-soft: #a5b4fc;
+  --text-on-accent: #ffffff;
   --text-primary: #fafafa;
   --text-secondary: #e5e5e5;
   --text-muted: #a3a3a3;
@@ -106,6 +112,30 @@
   background-color: var(--accent-primary);
  }
 
+ .bg-accent-hover {
+  background-color: var(--accent-primary-hover);
+ }
+
+ .hover\:bg-accent-hover:hover {
+  background-color: var(--accent-primary-hover);
+ }
+
+ .bg-accent-muted {
+  background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+ }
+
+ .hover\:bg-accent-muted-hover:hover {
+  background-color: color-mix(in srgb, var(--accent-primary) 25%, transparent);
+ }
+
+ .bg-accent-subtle {
+  background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+ }
+
+ :root:not(.dark) .bg-accent-subtle {
+  background-color: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-secondary));
+ }
+
  .bg-focus {
   background-color: var(--bg-active);
  }
@@ -164,7 +194,39 @@
   @apply border-emerald-500;
  }
 
+ .border-accent {
+  border-color: var(--accent-primary);
+ }
+
+ .border-accent-muted {
+  border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+ }
+
+ .border-accent-strong {
+  border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+ }
+
+ .border-l-accent {
+  border-left-color: var(--accent-primary);
+ }
+
+ .hover\:border-accent-muted:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+ }
+
+ .hover\:border-accent-strong:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+ }
+
+ .hover\:border-accent-soft:hover {
+  border-color: var(--accent-primary-soft);
+ }
+
  /* Ring utilities */
+ .ring-accent {
+  --tw-ring-color: var(--accent-primary);
+ }
+
  .ring-focus {
   --tw-ring-color: var(--accent-primary);
  }
@@ -188,6 +250,26 @@
 
  .text-accent {
   color: var(--accent-primary);
+ }
+
+ .text-accent-soft {
+  color: var(--accent-primary-soft);
+ }
+
+ .hover\:text-accent-soft:hover {
+  color: var(--accent-primary-soft);
+ }
+
+ .text-on-accent {
+  color: var(--text-on-accent);
+ }
+
+ .text-accent\/90 {
+  color: color-mix(in srgb, var(--accent-primary) 90%, transparent);
+ }
+
+ .text-accent\/70 {
+  color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
  }
 
  /* Semantic text colors */
@@ -272,8 +354,12 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
  }
 
+ .shadow-accent {
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+ }
+
  .shadow-button-primary {
-  @apply shadow-lg shadow-indigo-600/20;
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 20%, transparent);
  }
 
  .shadow-button-emerald {
@@ -287,6 +373,35 @@
  /* Focus ring utility for accessibility */
  .focus-ring {
   @apply focus:outline-none focus:ring-1 focus:ring-gray-500/15 focus:ring-inset;
+ }
+
+ .focus-accent:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+ }
+
+ .accent-control {
+  accent-color: var(--accent-primary);
+ }
+
+ .btn-accent {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+ }
+
+ .btn-accent:hover {
+  background-color: var(--accent-primary-hover);
+ }
+
+ .btn-accent:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
  }
 
  /*.dark .focus-ring {
@@ -307,13 +422,15 @@
 
  /* Button hover states */
  .btn-ghost {
-  @apply transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+  @apply transition-colors rounded focus-visible:outline-none focus-visible:ring-2;
+  --tw-ring-color: var(--accent-primary);
  }
  .btn-ghost:hover {
   background-color: var(--bg-hover);
  }
  .btn-icon {
-  @apply p-2 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+  @apply p-2 transition-colors rounded focus-visible:outline-none focus-visible:ring-2;
+  --tw-ring-color: var(--accent-primary);
  }
  .btn-icon:hover {
   background-color: var(--bg-hover);
@@ -343,6 +460,9 @@
  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
  --font-mono: "JetBrains Mono", "Fira Code", monospace;
  --color-shadow-primary: var(--bg-primary);
+ --color-accent: var(--accent-primary);
+ --color-accent-hover: var(--accent-primary-hover);
+ --color-accent-soft: var(--accent-primary-soft);
 }
 
 /* Scrollbar styling */
@@ -365,7 +485,7 @@
 }
 
 /* Custom animations */
-@keyframes pulse-indigo {
+@keyframes pulse-accent {
  0%, 100% {
   opacity: 1;
   transform: scale(1);
@@ -376,8 +496,8 @@
  }
 }
 
-.animate-pulse-indigo {
- animation: pulse-indigo 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-pulse-accent {
+ animation: pulse-accent 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
  will-change: transform, opacity;
 }
 
@@ -396,5 +516,26 @@
 
 .animate-shake {
  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+ will-change: transform;
+}
+
+/* Route transition loading bar */
+@keyframes route-loading-bar {
+ 0% {
+  transform: scaleX(0);
+  transform-origin: left;
+ }
+ 70% {
+  transform: scaleX(0.85);
+  transform-origin: left;
+ }
+ 100% {
+  transform: scaleX(1);
+  transform-origin: right;
+ }
+}
+
+.route-loading-bar {
+ animation: route-loading-bar 300ms ease-out forwards;
  will-change: transform;
 }

@@ -1,9 +1,10 @@
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { Loader2 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { agentRPCClient, useAgentList } from "../rpc.ts";
+import AppPageHeader from "./ui/AppPageHeader.tsx";
 import { toastManager } from "./ui/toast.tsx";
 
 interface AgentLauncherAppProps {
@@ -39,8 +40,10 @@ export default function AgentLauncherApp({
   const agents = useAgentList();
   const [creating, setCreating] = useState(false);
 
-  // Show all running agents (can't filter by type from listAgents response)
-  const existingAgents = agents.data ?? [];
+  const existingAgents = useMemo(
+    () => (agents.data ?? []).filter(agent => agent.agentType === agentType),
+    [agents.data, agentType],
+  );
 
   const launch = async () => {
     setCreating(true);
@@ -57,16 +60,7 @@ export default function AgentLauncherApp({
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
-      {/* App header */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className={`w-7 h-7 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center shadow-sm [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-white`}>
-          {icon}
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-primary">{label}</h1>
-          <p className="text-2xs text-muted">{description}</p>
-        </div>
-      </div>
+      <AppPageHeader title={label} subtitle={description} icon={icon} iconGradient={gradient} />
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -113,7 +107,7 @@ export default function AgentLauncherApp({
               type="button"
               onClick={launch}
               disabled={creating}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-button-primary"
+              className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-button-primary"
               aria-label={`Launch ${label} agent`}
             >
               {creating ? (

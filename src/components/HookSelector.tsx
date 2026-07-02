@@ -1,8 +1,10 @@
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import { Check, Search, X, XCircle, Zap } from "lucide-react";
 import type React from "react";
 import { useCallback, useMemo, useState } from "react";
-import { RiCheckLine, RiCloseCircleLine, RiCloseLine, RiFlashlightLine, RiSearchLine } from "react-icons/ri";
 import { lifecycleRPCClient, useAvailableHooks, useEnabledHooks } from "../rpc.ts";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
+import { toastManager } from "./ui/toast.tsx";
 
 interface HookSelectorProps {
   agentId: string;
@@ -35,7 +37,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
         }
         void enabledHooks.mutate();
       } catch (error: unknown) {
-        console.error("Failed to toggle hook:", error);
+        toastManager.error(errorAsString(error), { duration: 5000 });
       }
     },
     [agentId, enabledHooks, enabledSet],
@@ -78,6 +80,20 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
     setFocusedIndex(index);
   }, []);
 
+  const handleToggleAll = useCallback(async () => {
+    const allHookNames = Object.keys(hooks ?? {});
+    try {
+      if (allEnabled) {
+        await lifecycleRPCClient.disableHooks({ agentId, hooks: allHookNames });
+      } else {
+        await lifecycleRPCClient.enableHooks({ agentId, hooks: allHookNames });
+      }
+      void enabledHooks.mutate();
+    } catch (error: unknown) {
+      toastManager.error(errorAsString(error), { duration: 5000 });
+    }
+  }, [agentId, allEnabled, enabledHooks, hooks]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -91,7 +107,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
           aria-label={`Select hooks. ${enabledCount} of ${hookCount} enabled`}
           title={`${enabledCount} of ${hookCount} hooks enabled`}
         >
-          <RiFlashlightLine className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
+          <Zap className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
           {!isIconTrigger && (
             <span className="text-xs font-mono text-muted group-hover:text-primary truncate max-w-48">
               {enabledCount}/{hookCount} enabled
@@ -108,7 +124,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
           <span className="text-sm flex-1 font-mono text-muted shrink-0">Hooks</span>
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-2.5 flex items-center pointer-events-none">
-              <RiSearchLine className="w-4 h-4 text-muted" />
+              <Search className="w-4 h-4 text-muted" />
             </div>
             <input
               type="text"
@@ -138,7 +154,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
                 className="absolute inset-y-0 right-2 flex items-center p-0.5 rounded-md text-muted hover:text-primary hover:bg-hover transition-colors focus-ring"
                 aria-label="Clear search"
               >
-                <RiCloseCircleLine className="w-3.5 h-3.5" />
+                <XCircle className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -149,15 +165,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
           <div className="border-b border-primary px-3">
             <button
               type="button"
-              onClick={() => {
-                const allHookNames = Object.keys(hooks ?? {});
-                if (allEnabled) {
-                  void lifecycleRPCClient.disableHooks({ agentId, hooks: allHookNames });
-                } else {
-                  void lifecycleRPCClient.enableHooks({ agentId, hooks: allHookNames });
-                }
-                void enabledHooks.mutate();
-              }}
+              onClick={() => void handleToggleAll()}
               className="w-full flex items-center justify-between p-2 rounded-md hover:bg-hover transition-colors text-xs font-mono focus-ring"
             >
               <span className="text-muted">{allEnabled ? "Disable all hooks" : "Enable all hooks"}</span>
@@ -203,9 +211,9 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
                   {hook.description && <div className="text-2xs text-dim font-mono leading-tight truncate mt-0.5">{hook.description}</div>}
                 </div>
                 {isEnabled ? (
-                  <RiCheckLine className="w-3 h-3 text-amber-500 dark:text-amber-400 ml-2 shrink-0" aria-label="Enabled" />
+                  <Check className="w-3 h-3 text-amber-500 dark:text-amber-400 ml-2 shrink-0" aria-label="Enabled" />
                 ) : (
-                  <RiCloseLine className="w-3 h-3 text-muted group-hover:text-primary ml-2 shrink-0" aria-label="Disabled" />
+                  <X className="w-3 h-3 text-muted group-hover:text-primary ml-2 shrink-0" aria-label="Disabled" />
                 )}
               </div>
             );

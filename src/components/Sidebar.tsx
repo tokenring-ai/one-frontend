@@ -1,5 +1,6 @@
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import {
+  AlertTriangle,
   BookOpen,
   CalendarDays,
   Cpu,
@@ -7,7 +8,6 @@ import {
   FolderOpen,
   GitBranch,
   Image,
-  Loader2,
   Lock,
   Mail,
   MessageSquare,
@@ -30,6 +30,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { agentRPCClient, type useAgentList, type useAgentTypes, type useWorkflows, workflowRPCClient } from "../rpc";
 import ConfirmDialog from "./overlay/confirm-dialog.tsx";
 import { useSidebar } from "./SidebarContext";
+import ErrorState from "./ui/ErrorState.tsx";
+import LoadingState from "./ui/LoadingState.tsx";
 import { toastManager } from "./ui/toast";
 
 interface SidebarProps {
@@ -52,7 +54,7 @@ const APP_NAV_ITEMS: AppNavItem[] = [
   { path: "/canvas", icon: <PenTool className="w-4 h-4" />, label: "Canvas", color: "text-purple-400" },
   { path: "/documents", icon: <FileText className="w-4 h-4" />, label: "Documents", color: "text-lime-400" },
   { path: "/blog", icon: <BookOpen className="w-4 h-4" />, label: "Blog", color: "text-rose-400" },
-  { path: "/files", icon: <FolderOpen className="w-4 h-4" />, label: "Files", color: "text-indigo-400" },
+  { path: "/files", icon: <FolderOpen className="w-4 h-4" />, label: "Files", color: "text-accent-soft" },
   { path: "/terminal", icon: <Terminal className="w-4 h-4" />, label: "Terminal", color: "text-gray-400" },
   { path: "/email", icon: <Mail className="w-4 h-4" />, label: "Email", color: "text-red-400" },
   { path: "/calendar", icon: <CalendarDays className="w-4 h-4" />, label: "Calendar", color: "text-sky-400" },
@@ -71,19 +73,12 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
   const location = useLocation();
   const { isSidebarExpanded, toggleSidebar, isMobileOpen, setMobileOpen, localStorageAvailable } = useSidebar();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [showStorageWarning, setShowStorageWarning] = useState(false);
+  const [storageBannerDismissed, setStorageBannerDismissed] = useState(false);
 
   const navigateAndClose = (path: string) => {
     void navigate(path);
     setMobileOpen(false);
   };
-
-  React.useEffect(() => {
-    if (!localStorageAvailable && !showStorageWarning) {
-      setShowStorageWarning(true);
-      toastManager.warning("Your sidebar preferences will not be saved. Browser storage is unavailable.", { duration: 8000 });
-    }
-  }, [localStorageAvailable, showStorageWarning]);
 
   // Determine active app from current pathname
   const activeApp =
@@ -153,6 +148,27 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
         aria-label="Navigation sidebar"
         className={`fixed md:relative border-r border-primary bg-sidebar flex flex-col shrink-0 overflow-hidden h-[calc(100vh-3rem)] md:h-full transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} ${isSidebarExpanded ? "w-72" : "w-12"} top-12 left-0 md:top-auto md:left-auto z-40`}
       >
+        {!localStorageAvailable && !storageBannerDismissed && isSidebarExpanded && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="shrink-0 border-b border-warning/30 bg-warning/10 px-3 py-2 flex items-start gap-2"
+          >
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+            <p className="flex-1 text-2xs text-primary leading-snug">
+              Sidebar preferences will not be saved because browser storage is unavailable.
+            </p>
+            <button
+              type="button"
+              onClick={() => setStorageBannerDismissed(true)}
+              className="shrink-0 p-1 rounded-md hover:bg-warning/20 transition-colors focus-ring"
+              aria-label="Dismiss storage warning"
+            >
+              <X className="w-3.5 h-3.5 text-primary" />
+            </button>
+          </div>
+        )}
+
         {/* App nav rail + collapse toggle */}
         <div className={`flex shrink-0 border-b border-primary ${isSidebarExpanded ? "items-center" : "flex-col items-center py-2 gap-0.5"}`}>
           {isSidebarExpanded ? (
@@ -166,7 +182,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                     key={item.path}
                     onClick={() => navigateAndClose(item.path)}
                     className={`flex items-center gap-1 px-2 py-2 text-xs font-medium transition-colors border-b-2 -mb-px shrink-0 focus-ring cursor-pointer rounded-t-md ${
-                      isActive ? "border-indigo-500 text-primary" : "border-transparent text-muted hover:text-primary"
+                      isActive ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
                     }`}
                     title={item.label}
                     aria-label={item.label}
@@ -243,9 +259,14 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                     </span>
                   </div>
                   {agents.isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="w-5 h-5 text-muted animate-spin" />
-                    </div>
+                    <LoadingState size="sm" className="py-8" />
+                  ) : agents.error ? (
+                    <ErrorState
+                      title="Failed to load agents"
+                      error={agents.error}
+                      onRetry={() => void agents.mutate()}
+                      variant="inline"
+                    />
                   ) : (agents.data?.length ?? 0) === 0 ? (
                     <div className="px-3 py-4 text-center text-muted text-2xs italic">No active agents</div>
                   ) : (
@@ -296,11 +317,16 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
 
                 {/* Launch Agent */}
                 <div className="space-y-3">
-                  <span className="text-2xs font-bold text-indigo-500/90 uppercase tracking-widest px-2 block">Launch Agent</span>
+                  <span className="text-2xs font-bold text-accent/90 uppercase tracking-widest px-2 block">Launch Agent</span>
                   {agentTypes.isLoading ? (
-                    <div className="flex justify-center py-4">
-                      <Loader2 className="w-5 h-5 text-muted animate-spin" />
-                    </div>
+                    <LoadingState size="sm" className="py-4" />
+                  ) : agentTypes.error ? (
+                    <ErrorState
+                      title="Failed to load agent types"
+                      error={agentTypes.error}
+                      onRetry={() => void agentTypes.mutate()}
+                      variant="inline"
+                    />
                   ) : (
                     Object.entries(groupedTemplates).map(([category, templates]) => (
                       <div key={category}>
@@ -314,7 +340,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                               className="flex items-start gap-3 px-3 py-2 rounded-md hover:bg-hover transition-all text-left group w-full focus-ring cursor-pointer active:scale-[0.98]"
                               aria-label={`Create new agent: ${template.displayName}`}
                             >
-                              <User className="w-3.5 h-3.5 text-indigo-500/70 group-hover:text-indigo-500 shrink-0 mt-0.5" />
+                              <User className="w-3.5 h-3.5 text-accent/70 group-hover:text-accent shrink-0 mt-0.5" />
                               <div className="min-w-0">
                                 <div className="text-sm font-medium text-secondary group-hover:text-primary truncate">{template.displayName}</div>
                                 <div className="text-2xs text-muted line-clamp-1 mt-0.5">{template.description}</div>
@@ -334,9 +360,14 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
               <div className="space-y-1">
                 <span className="text-2xs font-bold text-cyan-600 dark:text-cyan-500/90 uppercase tracking-widest px-2 block mb-2">Workflows</span>
                 {workflows.isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-5 h-5 text-muted animate-spin" />
-                  </div>
+                  <LoadingState size="sm" className="py-8" />
+                ) : workflows.error ? (
+                  <ErrorState
+                    title="Failed to load workflows"
+                    error={workflows.error}
+                    onRetry={() => void workflows.mutate()}
+                    variant="inline"
+                  />
                 ) : (workflows.data?.length ?? 0) === 0 ? (
                   <div className="px-3 py-4 text-center text-muted text-2xs italic">No workflows available</div>
                 ) : (

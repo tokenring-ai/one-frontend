@@ -1,5 +1,9 @@
+import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { Eye, EyeOff, KeyRound, Loader2, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Upload, X } from "lucide-react";
 import { useState } from "react";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
+import ErrorState from "../../components/ui/ErrorState.tsx";
+import LoadingState from "../../components/ui/LoadingState.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
 import { useVaultKeys, vaultRPCClient } from "../../rpc.ts";
 
@@ -28,8 +32,8 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
       setEditing(false);
       setValue("");
       onSaved();
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to save", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -45,8 +49,8 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
       await vaultRPCClient.deleteItems({ updates: [{ category, key: keyName }] });
       toastManager.success(`"${keyName}" deleted`, { duration: 3000 });
       onDeleted();
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to delete", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
       setDeleting(false);
       setConfirmDelete(false);
     }
@@ -119,7 +123,7 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
                 }
               }}
               autoFocus
-              className="w-full bg-input border border-primary rounded-lg py-1.5 pl-3 pr-8 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 font-mono"
+              className="w-full bg-input border border-primary rounded-lg py-1.5 pl-3 pr-8 text-xs text-primary placeholder-muted focus-accent font-mono"
             />
             <button
               type="button"
@@ -133,7 +137,7 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
             type="button"
             onClick={handleSave}
             disabled={saving || !value}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
           >
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
           </button>
@@ -172,8 +176,8 @@ function AddKeyForm({ category, onAdded }: { category: string; onAdded: () => vo
       setValue("");
       setOpen(false);
       onAdded();
-    } catch (err: any) {
-      toastManager.error(err.message || "Failed to add key", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -199,7 +203,7 @@ function AddKeyForm({ category, onAdded }: { category: string; onAdded: () => vo
         value={key}
         onChange={e => setKey(e.target.value)}
         autoFocus
-        className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 font-mono"
+        className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus-accent font-mono"
       />
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
@@ -212,7 +216,7 @@ function AddKeyForm({ category, onAdded }: { category: string; onAdded: () => vo
               if (e.key === "Enter") void handleSave();
               if (e.key === "Escape") setOpen(false);
             }}
-            className="w-full bg-input border border-primary rounded-lg py-1.5 pl-3 pr-8 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 font-mono"
+            className="w-full bg-input border border-primary rounded-lg py-1.5 pl-3 pr-8 text-xs text-primary placeholder-muted focus-accent font-mono"
           />
           <button
             type="button"
@@ -226,7 +230,7 @@ function AddKeyForm({ category, onAdded }: { category: string; onAdded: () => vo
           type="button"
           onClick={handleSave}
           disabled={saving || !key.trim() || !value}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
         >
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
         </button>
@@ -284,8 +288,8 @@ function BulkImportModal({
       toastManager.success(`Imported ${preview.length} key${preview.length !== 1 ? "s" : ""} into "${categoryLabel}"`, { duration: 4000 });
       onImported();
       onClose();
-    } catch (err: any) {
-      toastManager.error(err.message || "Import failed", { duration: 5000 });
+    } catch (err: unknown) {
+      toastManager.error(errorAsString(err), { duration: 5000 });
     } finally {
       setImporting(false);
     }
@@ -299,7 +303,7 @@ function BulkImportModal({
       >
         {/* Modal header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-primary">
-          <Upload className="w-4 h-4 text-indigo-400 shrink-0" />
+          <Upload className="w-4 h-4 text-accent-soft shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-primary">Bulk Import</p>
             <p className="text-2xs text-muted">Into: {categoryLabel}</p>
@@ -320,7 +324,7 @@ function BulkImportModal({
             onChange={e => setText(e.target.value)}
             placeholder={"API_KEY=abc123\nSECRET_TOKEN=xyz789\n# this is a comment"}
             rows={8}
-            className="w-full bg-input border border-primary rounded-lg py-2 px-3 text-xs text-primary placeholder-muted font-mono resize-none focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20"
+            className="w-full bg-input border border-primary rounded-lg py-2 px-3 text-xs text-primary placeholder-muted font-mono resize-none focus-accent"
           />
         </div>
 
@@ -354,7 +358,7 @@ function BulkImportModal({
             type="button"
             onClick={handleImport}
             disabled={importing || !preview.length}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-ring"
           >
             {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
             Import {preview.length > 0 ? `${preview.length} key${preview.length !== 1 ? "s" : ""}` : ""}
@@ -370,23 +374,19 @@ function BulkImportModal({
 function CategorySection({
   category,
   label,
-  entries,
+  keys = [],
   search,
   onMutate,
 }: {
   category: string;
   label: string;
-  entries: Record<string, unknown>;
+  keys: string[] | undefined;
   search: string;
   onMutate: () => void;
 }) {
   const [importOpen, setImportOpen] = useState(false);
 
-  const allKeys = Object.keys(entries)
-    .filter(k => k.startsWith(`${category}.`))
-    .map(k => k.slice(category.length + 1));
-
-  const filtered = search.trim() ? allKeys.filter(k => k.toLowerCase().includes(search.toLowerCase())) : allKeys;
+  const filtered = search.trim() ? keys.filter(k => k.toLowerCase().includes(search.toLowerCase())) : keys;
 
   return (
     <>
@@ -418,7 +418,7 @@ function CategorySection({
         </div>
 
         <p className="text-2xs text-muted text-right">
-          {allKeys.length} key{allKeys.length !== 1 ? "s" : ""}
+          {keys.length} key{keys.length !== 1 ? "s" : ""}
         </p>
       </div>
     </>
@@ -439,15 +439,12 @@ export default function VaultApp() {
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">
-      {/* Header */}
-      <div className="shrink-0 border-b border-primary bg-secondary px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-linear-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-sm">
-          <Lock className="w-4 h-4 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-sm font-semibold text-primary">Vault</h1>
-          <p className="text-2xs text-muted">Manage encrypted credentials and secrets</p>
-        </div>
+      <AppPageHeader
+        title="Vault"
+        subtitle="Manage encrypted credentials and secrets"
+        icon={<Lock className="w-4 h-4" />}
+        iconGradient="from-yellow-500 to-amber-600"
+      >
         <button
           type="button"
           onClick={() => vault.mutate()}
@@ -456,7 +453,7 @@ export default function VaultApp() {
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
-      </div>
+      </AppPageHeader>
 
       {/* Category tabs */}
       <div className="shrink-0 flex items-center gap-1 px-4 sm:px-6 pt-3 pb-0 border-b border-primary overflow-x-auto">
@@ -464,7 +461,7 @@ export default function VaultApp() {
           type="button"
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1.5 text-xs font-medium rounded-t-md border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-            activeCategory === null ? "text-primary border-indigo-500" : "text-muted border-transparent hover:text-primary"
+            activeCategory === null ? "text-primary border-accent" : "text-muted border-transparent hover:text-primary"
           }`}
         >
           All
@@ -475,7 +472,7 @@ export default function VaultApp() {
             key={c.id}
             onClick={() => setActiveCategory(c.id)}
             className={`px-3 py-1.5 text-xs font-medium rounded-t-md border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-              activeCategory === c.id ? "text-primary border-indigo-500" : "text-muted border-transparent hover:text-primary"
+              activeCategory === c.id ? "text-primary border-accent" : "text-muted border-transparent hover:text-primary"
             }`}
           >
             {c.label}
@@ -486,9 +483,14 @@ export default function VaultApp() {
       {/* Body */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {vault.isLoading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="w-5 h-5 text-muted animate-spin" />
-          </div>
+          <LoadingState message="Loading vault…" className="py-16" />
+        ) : vault.error ? (
+          <ErrorState
+            title="Failed to load vault"
+            error={vault.error}
+            onRetry={() => void vault.mutate()}
+            variant="page"
+          />
         ) : locked ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
             <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg">
@@ -501,7 +503,7 @@ export default function VaultApp() {
             <button
               type="button"
               onClick={() => vault.mutate()}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus-ring"
+              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus-ring"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Check again
             </button>
@@ -514,12 +516,12 @@ export default function VaultApp() {
               placeholder="Search keys..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full bg-input border border-primary rounded-lg py-1.5 px-3 text-xs text-primary placeholder-muted focus-accent"
             />
 
             {/* Category sections */}
             {displayedCategories.map(c => (
-              <CategorySection key={c.id} category={c.id} label={c.label} entries={entries} search={search} onMutate={() => vault.mutate()} />
+              <CategorySection key={c.id} category={c.id} label={c.label} keys={entries[c.id]} search={search} onMutate={() => vault.mutate()} />
             ))}
           </div>
         )}

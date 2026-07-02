@@ -1,0 +1,64 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ChatInputProvider, useChatInput } from "../ChatInputContext.tsx";
+import { StorageErrorBanner } from "./StorageErrorBanner.tsx";
+
+function ChatInputWriter() {
+  const { setInput } = useChatInput();
+
+  useEffect(() => {
+    setInput("agent-1", "draft message");
+  }, []);
+
+  return null;
+}
+
+describe("StorageErrorBanner", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("shows a warning when chat input persistence fails", async () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+
+    render(
+      <ChatInputProvider>
+        <ChatInputWriter />
+        <StorageErrorBanner />
+      </ChatInputProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(screen.getByText(/localStorage unavailable/i)).toBeInTheDocument();
+    });
+  });
+
+  it("can be dismissed", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+
+    render(
+      <ChatInputProvider>
+        <ChatInputWriter />
+        <StorageErrorBanner />
+      </ChatInputProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByLabelText("Dismiss warning"));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+  });
+});

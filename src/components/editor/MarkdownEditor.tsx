@@ -12,6 +12,10 @@ export default function MarkdownEditor({ content, onContentChange }: FileViewerP
   const [editorContent, setEditorContent] = useState(content);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("preview");
 
+  React.useEffect(() => {
+    setEditorContent(content);
+  }, [content]);
+
   const handleContentChange = (value?: string) => {
     if (value) {
       setEditorContent(value);

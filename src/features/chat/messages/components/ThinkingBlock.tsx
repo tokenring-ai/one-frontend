@@ -17,10 +17,7 @@ export default function ThinkingBlock({ message }: ThinkingBlockProps) {
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-1.5 text-[13px] text-dim hover:text-muted transition-colors focus:outline-none select-none w-full text-left"
       >
-        <ChevronDown
-          size={13}
-          className={`shrink-0 transition-transform duration-150 ${isExpanded ? "rotate-0" : "-rotate-90"}`}
-        />
+        <ChevronDown size={13} className={`shrink-0 transition-transform duration-150 ${isExpanded ? "rotate-0" : "-rotate-90"}`} />
         <Zap size={13} className="shrink-0 text-warning" />
         <span className="italic">{isExpanded ? "Thinking" : "Thinking ..."}</span>
       </button>

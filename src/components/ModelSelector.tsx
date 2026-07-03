@@ -1,18 +1,6 @@
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  BookOpen,
-  Bot,
-  Check,
-  Cloud,
-  Code,
-  Cpu,
-  Database,
-  GitFork,
-  Search,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { BookOpen, Bot, Check, Cloud, Code, Cpu, Database, GitFork, Search, Sparkles, Zap } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { chatRPCClient, useChatModelsByProvider, useModel } from "../rpc.ts";
@@ -214,9 +202,9 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
           <div className="flex-1 overflow-y-auto custom-scrollbar py-1 space-y-0.5">
             {Object.entries(groupedModels).map(([provider, models]) => {
               const isProviderExpanded = expandedProviders.has(provider);
-              const providerCode = models.length > 0 ? models[0]?.modelName.replace(/:.*/, "") : "unknown";
-              const providerIcon = providerIcons[providerCode] || <Database className="w-3.5 h-3.5" />;
-              const providerColor = providerColors[providerCode] || providerColors.default;
+              const providerCode = models[0]?.modelName.replace(/:.*/, "") ?? "unknown";
+              const providerIcon = providerIcons[providerCode] ?? <Database className="w-3.5 h-3.5" />;
+              const providerColor = providerColors[providerCode] ?? providerColors.default;
 
               return (
                 <div key={provider} className="flex flex-col">

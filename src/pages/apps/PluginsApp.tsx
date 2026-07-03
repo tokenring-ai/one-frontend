@@ -59,13 +59,7 @@ export default function PluginsApp() {
             {plugins.isLoading ? (
               <LoadingState message="Loading plugins…" className="py-16" />
             ) : plugins.error ? (
-              <ErrorState
-                title="Failed to load plugins"
-                error={plugins.error}
-                onRetry={() => void plugins.mutate()}
-                variant="inline"
-                className="py-6"
-              />
+              <ErrorState title="Failed to load plugins" error={plugins.error} onRetry={() => void plugins.mutate()} variant="inline" className="py-6" />
             ) : installedPlugins.length === 0 ? (
               <div className="px-4 py-12 text-center">
                 <Package className="w-8 h-8 text-muted mx-auto mb-3" />

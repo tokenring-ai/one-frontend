@@ -190,7 +190,7 @@ function PostViewer({
     if (post.status === "published") return;
     setPublishing(true);
     try {
-      await blogRPCClient.updatePost({ provider, id: post.id, updatedData: { status: "published" }});
+      await blogRPCClient.updatePost({ provider, id: post.id, updatedData: { status: "published" } });
       toastManager.success("Post published!", { duration: 3000 });
       onRefresh();
     } catch (err: unknown) {
@@ -500,8 +500,9 @@ export default function BlogApp() {
     if (!blogStateData) return;
     const { selectedProvider, availableProviders: ap } = blogStateData;
     setAvailableProviders(ap);
-    if (!provider && (selectedProvider ?? ap[0])) {
-      setProvider(selectedProvider ?? ap[0]);
+    const newProvider = selectedProvider ?? ap[0];
+    if (!provider && newProvider) {
+      setProvider(newProvider);
     }
   }, [blogStateData, provider]);
 

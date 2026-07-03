@@ -1,4 +1,14 @@
-export default function ModelSelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+export default function ModelSelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
   const isEmpty = options.length === 0;
   return (
     <div className="space-y-1.5">

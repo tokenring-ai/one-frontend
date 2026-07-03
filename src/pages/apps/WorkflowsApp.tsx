@@ -26,10 +26,7 @@ export default function WorkflowsApp() {
 
   const workflowAgentTypes = useMemo(() => new Set(workflows.data?.map(w => w.agentType) ?? []), [workflows.data]);
 
-  const runningAgents = useMemo(
-    () => (agents.data ?? []).filter(a => !a.idle && workflowAgentTypes.has(a.agentType)),
-    [agents.data, workflowAgentTypes],
-  );
+  const runningAgents = useMemo(() => (agents.data ?? []).filter(a => !a.idle && workflowAgentTypes.has(a.agentType)), [agents.data, workflowAgentTypes]);
 
   return (
     <div className="w-full h-full flex flex-col bg-primary">

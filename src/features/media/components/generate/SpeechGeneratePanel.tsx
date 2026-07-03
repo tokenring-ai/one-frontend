@@ -41,11 +41,7 @@ export default function SpeechGeneratePanel({ agentId, onGenerated }: { agentId:
         ...(voice && { voice }),
         ...(speed > 0 && { speed }),
         ...(selectedModel && { model: selectedModel }),
-        keywords: text
-          .trim()
-          .split(/\s+/)
-          .filter(Boolean)
-          .slice(0, 10),
+        keywords: text.trim().split(/\s+/).filter(Boolean).slice(0, 10),
       });
       if (result.status === "success") {
         toastManager.success("Speech generated!", { duration: 3000 });

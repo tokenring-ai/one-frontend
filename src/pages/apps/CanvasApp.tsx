@@ -246,12 +246,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
 
       <AppPageHeader title="Canvas" icon={<PenTool className="w-4 h-4" />} iconGradient="from-purple-500 to-violet-600" size="compact">
         <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
-          <input
-            type="checkbox"
-            checked={autoPreview}
-            onChange={e => setAutoPreview(e.target.checked)}
-            className="w-3.5 h-3.5 accent-control cursor-pointer"
-          />
+          <input type="checkbox" checked={autoPreview} onChange={e => setAutoPreview(e.target.checked)} className="w-3.5 h-3.5 accent-control cursor-pointer" />
           <span className="text-2xs text-muted select-none">Auto-preview</span>
         </label>
 
@@ -388,13 +383,7 @@ function EditorPreviewPane({
           <span className="text-2xs font-mono font-semibold text-muted uppercase tracking-wider">Preview</span>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/70 shrink-0" />
         </div>
-        <iframe
-          className="flex-1 w-full bg-white border-0"
-          srcDoc={previewHtml}
-          sandbox="allow-scripts"
-          referrerPolicy="no-referrer"
-          title="Canvas preview"
-        />
+        <iframe className="flex-1 w-full bg-white border-0" srcDoc={previewHtml} sandbox="allow-scripts" referrerPolicy="no-referrer" title="Canvas preview" />
       </div>
     </ResizableSplit>
   );

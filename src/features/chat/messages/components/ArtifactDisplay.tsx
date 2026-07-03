@@ -28,7 +28,7 @@ export default function ArtifactDisplay({ artifact }: { artifact: Extract<AgentE
     if (mime === "text/markdown") return `${textBody.length} chars`;
     if (mime === "application/json") return "JSON";
     if (mime === "text/html") return "HTML";
-    if (mime.startsWith("image/")) return mime.split("/")[1].toUpperCase();
+    if (mime.startsWith("image/")) return mime.split("/")[1]!.toUpperCase();
     return mime;
   }, [mime, textBody]);
 

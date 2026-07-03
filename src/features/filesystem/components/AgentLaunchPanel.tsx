@@ -17,8 +17,9 @@ export default function AgentLaunchPanel({ selectedPaths, onClear }: AgentLaunch
   const [launching, setLaunching] = useState(false);
 
   useEffect(() => {
-    if (!chosenType && agentTypes.data?.length) {
-      setChosenType(agentTypes.data[0].type);
+    const newChosenType = agentTypes.data?.[0];
+    if (!chosenType && newChosenType) {
+      setChosenType(newChosenType.type);
     }
   }, [agentTypes.data, chosenType]);
 

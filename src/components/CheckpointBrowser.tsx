@@ -113,7 +113,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
           break;
         default:
           const exhaustive: any = result satisfies never;
-          toastManager.error(`Failed to launch agent from checkpoint, unknown result: ${ exhaustive.status }`, { duration: 3000 });
+          toastManager.error(`Failed to launch agent from checkpoint, unknown result: ${exhaustive.status}`, { duration: 3000 });
           break;
       }
     } catch (error) {
@@ -140,7 +140,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
         <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-500/90 uppercase tracking-widest flex items-center gap-1.5">
-          <History className="w-3.5 h-3.5"/> Resume from Checkpoint
+          <History className="w-3.5 h-3.5" /> Resume from Checkpoint
         </span>
         <span className="text-2xs text-muted">{checkpoints.data.length} saved</span>
       </div>
@@ -161,7 +161,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
           aria-label="Select a checkpoint"
           aria-haspopup="listbox"
         >
-          <History className="w-3.5 h-3.5 text-emerald-500/70 shrink-0"/>
+          <History className="w-3.5 h-3.5 text-emerald-500/70 shrink-0" />
           <div className="flex-1 min-w-0">
             {selected ? (
               <>
@@ -172,7 +172,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
               <span className="text-sm text-muted">Select a checkpoint...</span>
             )}
           </div>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}/>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
 
         {/* Expandable dropdown list */}
@@ -183,7 +183,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                 {/* Search */}
                 <div className="px-3 py-2 border-b border-primary">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"/>
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
                     <input
                       ref={searchRef}
                       type="text"
@@ -199,7 +199,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted hover:bg-hover hover:text-primary cursor-pointer focus-ring"
                         aria-label="Clear search"
                       >
-                        <X className="w-3.5 h-3.5"/>
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -230,7 +230,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                             className="w-full flex items-center gap-1.5 px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wider hover:bg-hover transition-colors cursor-pointer"
                             aria-expanded={!isCollapsed}
                           >
-                            {isCollapsed ? <ChevronRight className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
+                            {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                             <span>{date}</span>
                             <span className="text-2xs font-mono text-muted ml-auto">{items.length}</span>
                           </button>
@@ -270,15 +270,9 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                                       aria-selected={cp.id === selectedId}
                                     >
                                       <div
-                                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                          cp.id === selectedId ? "bg-accent shadow-accent" : "bg-tertiary"
-                                        }`}
+                                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${cp.id === selectedId ? "bg-accent shadow-accent" : "bg-tertiary"}`}
                                       />
-                                      <span
-                                        className={`flex-1 text-sm truncate ${
-                                          cp.id === selectedId ? "text-accent font-medium" : "text-primary"
-                                        }`}
-                                      >
+                                      <span className={`flex-1 text-sm truncate ${cp.id === selectedId ? "text-accent font-medium" : "text-primary"}`}>
                                         {cp.name}
                                       </span>
                                       <span className="text-2xs text-muted font-mono shrink-0">{formatTime(cp.createdAt)}</span>
@@ -318,7 +312,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                 aria-label={`Clear selection`}
                 title="Clear selection"
               >
-                <X className="w-3 h-3"/>
+                <X className="w-3 h-3" />
                 Clear
               </button>
               <button
@@ -328,7 +322,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-button-primary"
                 aria-label={`Launch agent from checkpoint: ${selected.name}`}
               >
-                {launchingId === selected.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <RotateCcw className="w-3.5 h-3.5"/>}
+                {launchingId === selected.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                 Launch
               </button>
             </div>

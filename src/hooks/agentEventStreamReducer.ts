@@ -9,9 +9,7 @@ export type RemoteAgentStatus = Omit<AgentStatus, "status"> & {
 type AgentStatus = z.output<typeof AgentStatusSchema>;
 type InputExecutionState = z.output<typeof InputExecutionStateSchema>;
 
-export type AgentEventStreamChunk =
-  | { status: "agentNotFound" }
-  | { status: "success"; events: AgentEventEnvelope[]; position: number };
+export type AgentEventStreamChunk = { status: "agentNotFound" } | { status: "success"; events: AgentEventEnvelope[]; position: number };
 
 export type AgentEventStreamState = {
   messages: ChatMessage[];
@@ -74,7 +72,9 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
   };
 
   const seenQuestionIds = new Set(
-    currentMessages.filter((message): message is ChatMessage & { requestId: string; interactionId: string } => "interactionId" in message).map(message => `${message.requestId}:${message.interactionId}`),
+    currentMessages
+      .filter((message): message is ChatMessage & { requestId: string; interactionId: string } => "interactionId" in message)
+      .map(message => `${message.requestId}:${message.interactionId}`),
   );
 
   const addQuestionPrompts = (requestId: string, interactions: QuestionInteraction[] = []) => {
@@ -108,10 +108,11 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
       case "toolCall":
         appendMessage(event);
         break;
-      case "agent.status":
+      case "agent.status": {
         currentAgentStatus = event;
-        currentExecutionState = inputExecutions.get(event.inputExecutionQueue[0]);
-        break;
+        const requestId = event.inputExecutionQueue[0];
+        currentExecutionState = requestId ? inputExecutions.get(requestId) : undefined;
+      } break;
       case "input.execution":
         if (event.status === "finished") {
           inputExecutions.delete(event.requestId);
@@ -130,8 +131,8 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
       case "cancel":
         break;
       default: {
-        const _exhaustive: never = event;
-        throw new Error(`Unhandled event type: ${(_exhaustive as AgentEventEnvelope).type}`);
+        const exhaustive: any = event satisfies never;
+        throw new Error(`Unhandled event type: ${exhaustive.type}`);
       }
     }
   }

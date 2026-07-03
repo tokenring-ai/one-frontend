@@ -23,8 +23,9 @@ export default function FilesApp() {
   const [provider, setProvider] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!provider && fsProviders.data?.providers.length) {
-      setProvider(fsProviders.data.providers[0]);
+    const newProvider = fsProviders.data?.providers[0];
+    if (!provider && newProvider) {
+      setProvider(newProvider);
     }
   }, [fsProviders.data, provider]);
 

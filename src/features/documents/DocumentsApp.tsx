@@ -17,7 +17,11 @@ import type { RightPanel, TextSelection } from "./types.ts";
 export default function DocumentsApp() {
   const location = useLocation();
   const fsProviders = useFilesystemProviders();
-  const { agentId, initialising, error: initError } = useHeadlessAgent({
+  const {
+    agentId,
+    initialising,
+    error: initError,
+  } = useHeadlessAgent({
     appName: "Documents app",
     preferredTypes: ["writer"],
     noTypesMessage: "No agent types available for AI editing",

@@ -18,7 +18,7 @@ export default function EventChip({ event, onClick, compact = false }: { event: 
       )}
       aria-label={`Event: ${event.title}`}
     >
-      <TypeIcon className="shrink-0" size={compact ? 8 : 10}/>
+      <TypeIcon className="shrink-0" size={compact ? 8 : 10} />
       <span className="truncate">
         {compact ? "" : event.startTime ? `${event.startTime} ` : ""}
         {event.title}

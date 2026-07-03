@@ -1,11 +1,4 @@
-import {
-  Activity,
-  Bot,
-  CircleSlash,
-  FileCode,
-  Info,
-  Zap,
-} from "lucide-react";
+import { Activity, Bot, CircleSlash, FileCode, Info, Zap } from "lucide-react";
 import type React from "react";
 import type { ChatMessage } from "../../../types/agent-events.ts";
 

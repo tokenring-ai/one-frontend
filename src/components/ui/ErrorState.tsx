@@ -11,14 +11,7 @@ interface ErrorStateProps {
   className?: string;
 }
 
-export default function ErrorState({
-  title = "Something went wrong",
-  error,
-  onRetry,
-  retryLabel = "Retry",
-  variant = "inline",
-  className,
-}: ErrorStateProps) {
+export default function ErrorState({ title = "Something went wrong", error, onRetry, retryLabel = "Retry", variant = "inline", className }: ErrorStateProps) {
   const message = errorAsString(error);
 
   if (variant === "page") {
@@ -49,11 +42,7 @@ export default function ErrorState({
       <p className="text-sm text-warning">{title}</p>
       <p className="text-2xs text-muted mt-1">{message}</p>
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-2 text-2xs text-accent hover:text-accent-soft transition-colors focus-ring cursor-pointer"
-        >
+        <button type="button" onClick={onRetry} className="mt-2 text-2xs text-accent hover:text-accent-soft transition-colors focus-ring cursor-pointer">
           {retryLabel}
         </button>
       )}

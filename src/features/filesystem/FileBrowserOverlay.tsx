@@ -1,19 +1,5 @@
 import { FocusTrap } from "focus-trap-react";
-import {
-  Check,
-  ChevronRight,
-  Download,
-  Edit,
-  Eye,
-  EyeOff,
-  File,
-  Folder,
-  Plus,
-  Save,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Check, ChevronRight, Download, Edit, Eye, EyeOff, File, Folder, Plus, Save, Search, Trash2, X } from "lucide-react";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import CodeEditor from "../../components/editor/CodeEditor.tsx";
 import MarkdownEditor from "../../components/editor/MarkdownEditor.tsx";
@@ -105,17 +91,23 @@ export default function FileBrowserOverlay({ agentId, isOpen, onClose }: FileBro
           break;
         }
         case "Home":
-          e.preventDefault();
-          if (rows.length > 0) {
-            rows[0].focus();
-            rows[0].scrollIntoView({ block: "start" });
+          {
+            e.preventDefault();
+            const firstItem = rows[0];
+            if (firstItem) {
+              firstItem.focus();
+              firstItem.scrollIntoView({ block: "start" });
+            }
           }
           break;
         case "End":
-          e.preventDefault();
-          if (rows.length > 0) {
-            rows[rows.length - 1].focus();
-            rows[rows.length - 1].scrollIntoView({ block: "end" });
+          {
+            e.preventDefault();
+            const lastItem = rows[rows.length - 1];
+            if (lastItem) {
+              lastItem.focus();
+              lastItem.scrollIntoView({ block: "end" });
+            }
           }
           break;
         case "Escape":
@@ -552,7 +544,9 @@ export default function FileBrowserOverlay({ agentId, isOpen, onClose }: FileBro
               {selectedFile ? (
                 <>
                   <div className="p-4 border-b border-primary flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-tertiary flex items-center justify-center shrink-0">{getFileIcon(selectedFile, false, 24, "overlay")}</div>
+                    <div className="w-10 h-10 rounded-lg bg-tertiary flex items-center justify-center shrink-0">
+                      {getFileIcon(selectedFile, false, 24, "overlay")}
+                    </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-medium text-primary truncate" title={selectedFile}>
                         {getBasename(selectedFile)}

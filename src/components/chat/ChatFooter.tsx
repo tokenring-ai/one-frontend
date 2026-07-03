@@ -287,7 +287,7 @@ export default function ChatFooter({
 
           setHistoryIndex(newIndex);
           isNavigatingHistoryRef.current = true;
-          setInput(commandHistory[newIndex]);
+          setInput(commandHistory[newIndex] ?? "Array Overflow");
         }
         return;
       }
@@ -299,7 +299,7 @@ export default function ChatFooter({
             const newIndex = historyIndex + 1;
             setHistoryIndex(newIndex);
             isNavigatingHistoryRef.current = true;
-            setInput(commandHistory[newIndex]);
+            setInput(commandHistory[newIndex]!);
           } else {
             // Go back to the original input before history navigation
             setHistoryIndex(null);

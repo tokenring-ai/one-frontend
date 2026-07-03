@@ -33,7 +33,9 @@ export default function StockDetail({ symbol, onClear }: StockDetailProps) {
   const isDown = Number(change) < 0;
   const isFlat = !(isUp || isDown);
 
-  const logo = (quoteRow as { CLLogoBright128?: string; CLIconBright128?: string } | null)?.CLLogoBright128 ?? (quoteRow as { CLIconBright128?: string } | null)?.CLIconBright128;
+  const logo =
+    (quoteRow as { CLLogoBright128?: string; CLIconBright128?: string } | null)?.CLLogoBright128 ??
+    (quoteRow as { CLIconBright128?: string } | null)?.CLIconBright128;
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview", icon: <BarChart2 className="w-3.5 h-3.5" /> },
@@ -73,9 +75,7 @@ export default function StockDetail({ symbol, onClear }: StockDetailProps) {
                       {fmt(changePct)}%)
                     </span>
                   )}
-                  {quoteRow?.LastTradeTime && (
-                    <span className="text-2xs text-muted">· {fmtTs(quoteRow.LastTradeTime, "datetime")}</span>
-                  )}
+                  {quoteRow?.LastTradeTime && <span className="text-2xs text-muted">· {fmtTs(quoteRow.LastTradeTime, "datetime")}</span>}
                 </>
               ) : (
                 <span className="text-sm text-muted">Price unavailable</span>

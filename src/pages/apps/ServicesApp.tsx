@@ -113,14 +113,14 @@ function ToolsTab({ tools }: { tools: ReturnType<typeof useAvailableTools> }) {
               <div className="p-3 flex flex-wrap gap-1.5">
                 {toolNames.sort().map(toolName => {
                   const tool = toolRecord[toolName];
-                  const displayName = tool.displayName.replace(/^.*\//, "");
+                  const displayName = tool?.displayName.replace(/^.*\//, "");
                   return (
                     <span
                       key={toolName}
                       className="px-2 py-1 bg-tertiary border border-primary rounded-md text-2xs font-mono text-muted hover:text-primary transition-colors"
                       title={toolName}
                     >
-                      {displayName}
+                      {displayName ?? "Tool not found"}
                     </span>
                   );
                 })}

@@ -18,8 +18,7 @@ import type { MediaEntry, MediaKind } from "./types.ts";
 export default function MediaApp() {
   const { agentId, error: initError } = useHeadlessAgent({
     appName: "Media app",
-    resolvePreferred: types =>
-      types.find(t => Object.values(AGENT_TYPE_PREFERENCES).flat().includes(t.type)) ?? types[0],
+    resolvePreferred: types => types.find(t => Object.values(AGENT_TYPE_PREFERENCES).flat().includes(t.type)) ?? types[0],
     noTypesMessage: "No agent types available.",
   });
   const [chatAgentId, setChatAgentId] = useState<string | null>(null);

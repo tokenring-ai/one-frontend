@@ -71,7 +71,11 @@ export default function AudioViewer({
             <ActionButton onClick={() => void onWorkOnAudio()} primary icon={<Sparkles className="w-3.5 h-3.5" />}>
               Work on this audio
             </ActionButton>
-            <ActionButton onClick={() => void handleTranscribe()} disabled={transcribing} icon={transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Type className="w-3.5 h-3.5" />}>
+            <ActionButton
+              onClick={() => void handleTranscribe()}
+              disabled={transcribing}
+              icon={transcribing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Type className="w-3.5 h-3.5" />}
+            >
               {transcribing ? "Transcribing..." : "Transcribe"}
             </ActionButton>
           </>

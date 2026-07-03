@@ -34,7 +34,7 @@ export default function WeekView({
     const m: Record<string, CalendarEvent[]> = {};
     for (const ev of events) {
       if (!ev.startTime) continue;
-      const hour = parseInt(ev.startTime.split(":")[0], 10);
+      const hour = parseInt(ev.startTime.split(":")[0]!, 10);
       const k = `${ev.date}:${hour}`;
       (m[k] ||= []).push(ev);
     }
@@ -53,7 +53,7 @@ export default function WeekView({
     <div className="flex flex-col flex-1 min-h-0">
       {/* Day header */}
       <div className="flex border-b border-primary shrink-0">
-        <div className="w-14 shrink-0"/>
+        <div className="w-14 shrink-0" />
         {days.map(day => {
           const key = toDateKey(day);
           const isToday = key === todayKey;
@@ -73,7 +73,7 @@ export default function WeekView({
               {/* All-day events */}
               <div className="mt-1 px-1 space-y-0.5 min-h-1">
                 {(allDayByDate[key] ?? []).map(ev => (
-                  <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)} compact/>
+                  <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)} compact />
                 ))}
               </div>
             </div>
@@ -113,8 +113,8 @@ export default function WeekView({
                   .filter(([k]) => k.startsWith(dayKey))
                   .flatMap(([, evs]) => evs)
                   .map(ev => {
-                    const [h, min] = ev.startTime!.split(":").map(Number);
-                    const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) : [h + 1, min];
+                    const [h, min] = ev.startTime!.split(":").map(Number) as [number, number];
+                    const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) as [number, number] : [h + 1, min];
                     const top = (h + min / 60) * HOUR_H;
                     const height = Math.max((eh - h + (emin - min) / 60) * HOUR_H, 20);
                     return (
@@ -132,7 +132,7 @@ export default function WeekView({
                         style={{ top: `${top}px`, height: `${height}px` }}
                       >
                         <div className="flex items-center gap-1 truncate">
-                          {ev.type === "workflow" ? <GitBranch size={8} className="shrink-0"/> : <Bot size={8} className="shrink-0"/>}
+                          {ev.type === "workflow" ? <GitBranch size={8} className="shrink-0" /> : <Bot size={8} className="shrink-0" />}
                           {ev.title}
                         </div>
                         {ev.startTime && <div className="text-white/70">{ev.startTime}</div>}

@@ -32,7 +32,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
   const [type, setType] = useState<"agent" | "workflow" | "calendar">(event?.type ?? "workflow");
   const [agentType, setAgentType] = useState(event?.agentType ?? "");
   const [workflowKey, setWorkflowKey] = useState(event?.workflowKey ?? "");
-  const [color, setColor] = useState(event?.color ?? EVENT_COLORS[0].value);
+  const [color, setColor] = useState(event?.color ?? EVENT_COLORS[0]!.value);
 
   const titleRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
             className="p-1 rounded-lg hover:bg-hover transition-colors text-muted hover:text-primary cursor-pointer"
             aria-label="Close"
           >
-            <X size={18}/>
+            <X size={18} />
           </button>
         </div>
 
@@ -108,7 +108,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
               />
             </div>
             <label className="flex items-center gap-2 mt-4 cursor-pointer select-none">
-              <input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} className="rounded accent-sky-500"/>
+              <input type="checkbox" checked={allDay} onChange={e => setAllDay(e.target.checked)} className="rounded accent-sky-500" />
               <span className="text-xs text-primary">All day</span>
             </label>
           </div>
@@ -149,7 +149,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
                   type === "workflow" ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-primary text-muted hover:border-sky-500/40 hover:text-primary",
                 )}
               >
-                <GitBranch size={14}/> Workflow
+                <GitBranch size={14} /> Workflow
               </button>
               <button
                 type="button"
@@ -159,7 +159,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
                   type === "agent" ? "border-sky-500 bg-sky-500/10 text-sky-400" : "border-primary text-muted hover:border-sky-500/40 hover:text-primary",
                 )}
               >
-                <Bot size={14}/> Agent
+                <Bot size={14} /> Agent
               </button>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
               <label className="text-2xs font-semibold text-muted uppercase tracking-wider block mb-1">Workflow</label>
               {workflows.isLoading ? (
                 <div className="flex items-center gap-2 text-muted text-xs py-2">
-                  <Loader2 size={14} className="animate-spin"/> Loading…
+                  <Loader2 size={14} className="animate-spin" /> Loading…
                 </div>
               ) : (workflows.data?.length ?? 0) === 0 ? (
                 <p className="text-xs text-muted py-1">
@@ -196,7 +196,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
               <label className="text-2xs font-semibold text-muted uppercase tracking-wider block mb-1">Agent type</label>
               {agentTypes.isLoading ? (
                 <div className="flex items-center gap-2 text-muted text-xs py-2">
-                  <Loader2 size={14} className="animate-spin"/> Loading…
+                  <Loader2 size={14} className="animate-spin" /> Loading…
                 </div>
               ) : (
                 <select
@@ -245,7 +245,7 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
               disabled={running}
               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
-              {running ? <Loader2 size={13} className="animate-spin"/> : <Clock size={13}/>}
+              {running ? <Loader2 size={13} className="animate-spin" /> : <Clock size={13} />}
               Run now
             </button>
           )}
@@ -255,10 +255,10 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
               onClick={() => onDelete(event!.id)}
               className="flex items-center gap-1.5 px-3 py-2 border border-rose-500/40 hover:bg-rose-500/10 text-rose-500 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
             >
-              <Trash2 size={13}/> Delete
+              <Trash2 size={13} /> Delete
             </button>
           )}
-          <div className="flex-1"/>
+          <div className="flex-1" />
           <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-muted hover:text-primary transition-colors">
             Cancel
           </button>

@@ -29,7 +29,7 @@ import { useAgentStatusStream, useRPCStreamSWR } from "./hooks/useRPCStreamSWR.t
 export function useTypedSWR<Data = unknown, Err extends Error = Error, SWRKey extends Key = Key>(
   key: SWRKey,
   fetcher: Fetcher<Data, SWRKey> | null,
-  config?: SWRConfiguration<Data, Err, Fetcher<Data, SWRKey>>
+  config?: SWRConfiguration<Data, Err, Fetcher<Data, SWRKey>>,
 ): SWRResponse<Data, Err> {
   return useSWR<Data, Err, SWRKey>(key, fetcher, config);
 }
@@ -102,29 +102,27 @@ export function useFilesystemProviders() {
 }
 
 export function useFilesystemState(agentId: string | undefined) {
-  return useAgentStatusStream(agentId ? `filesystem:${agentId}` : null, signal =>
-    filesystemRPCClient.streamFilesystemState({ agentId: agentId! }, signal),
-  );
+  return useAgentStatusStream(agentId ? `filesystem:${agentId}` : null, signal => filesystemRPCClient.streamFilesystemState({ agentId: agentId! }, signal));
 }
 
 export function useDirectoryListing(opts?: { path: string; showHidden?: boolean; provider: string }) {
-  return useTypedSWR(
-    opts ? `/filesystem/listDirectory/${opts.provider}/${opts.path}` : null,
-    () =>
-      filesystemRPCClient.listDirectory({
-        path: opts!.path,
-        recursive: false,
-        showHidden: opts!.showHidden ?? false,
-        provider: opts!.provider,
-      }),
+  return useTypedSWR(opts ? `/filesystem/listDirectory/${opts.provider}/${opts.path}` : null, () =>
+    filesystemRPCClient.listDirectory({
+      path: opts!.path,
+      recursive: false,
+      showHidden: opts!.showHidden ?? false,
+      provider: opts!.provider,
+    }),
   );
 }
 
 export function useFileContents(path: string | undefined, provider: string | undefined) {
-  return useTypedSWR(path && provider ? `/filesystem/getFileContents/${provider}/${path}` : null, () => filesystemRPCClient.readTextFile({
-    path: path!,
-    provider: provider!
-  }));
+  return useTypedSWR(path && provider ? `/filesystem/getFileContents/${provider}/${path}` : null, () =>
+    filesystemRPCClient.readTextFile({
+      path: path!,
+      provider: provider!,
+    }),
+  );
 }
 
 export function useChatModelsByProvider() {

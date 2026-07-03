@@ -64,7 +64,7 @@ export default function App() {
     };
   }, [location.key]);
 
-  const currentAgentId = location.pathname.startsWith("/agent/") ? location.pathname.split("/")[2] : null;
+  const currentAgentId = location.pathname.startsWith("/agent/") ? location.pathname.split("/")[2]! : null;
 
   return (
     <SidebarProvider>

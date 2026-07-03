@@ -66,9 +66,7 @@ export default function SymbolSearchBox({ value, onChange, onSelect }: SymbolSea
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…
             </div>
           )}
-          {!search.isLoading && results.length === 0 && (
-            <div className="px-3 py-3 text-xs text-muted">No matches for "{debounced}"</div>
-          )}
+          {!search.isLoading && results.length === 0 && <div className="px-3 py-3 text-xs text-muted">No matches for "{debounced}"</div>}
           {results.map((r, i) => {
             const sym = r.Symbol ?? "";
             const logo = (r as { CLIconBright128?: string }).CLIconBright128;
@@ -82,11 +80,7 @@ export default function SymbolSearchBox({ value, onChange, onSelect }: SymbolSea
                 className="w-full flex items-center gap-3 px-3 py-2 hover:bg-hover transition-colors text-left border-b border-primary/40 last:border-0"
               >
                 <div className="w-7 h-7 rounded-md bg-secondary border border-primary flex items-center justify-center overflow-hidden shrink-0">
-                  {logo ? (
-                    <img src={logo} alt="" className="w-full h-full object-contain" />
-                  ) : (
-                    <Building2 className="w-3.5 h-3.5 text-muted" />
-                  )}
+                  {logo ? <img src={logo} alt="" className="w-full h-full object-contain" /> : <Building2 className="w-3.5 h-3.5 text-muted" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

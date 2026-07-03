@@ -169,8 +169,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
     const grouped: Record<string, Record<string, string>> = {};
     const categories = new Set<string>();
 
-    for (const toolName in filteredTools ?? {}) {
-      const tool = tools![toolName];
+    for (const [toolName, tool] of Object.entries(filteredTools ?? {})) {
       const [, category = "Unknown", displayName = tool.displayName] = tool.displayName.match(/^(.*)\/(.*)$/) ?? [];
       (grouped[category] ??= {})[displayName] = toolName;
       categories.add(category);
@@ -191,9 +190,9 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
   useEffect(() => {
     const categoriesWithEnabledTools = new Set<string>();
     enabledToolsData?.tools?.forEach(tool => {
-      const match = tool.match(/^(.*)\//);
-      if (match) {
-        categoriesWithEnabledTools.add(match[1]);
+      const [, toolName] = tool.match(/^(.*)\//) ?? [];
+      if (toolName) {
+        categoriesWithEnabledTools.add(toolName);
       }
     });
     setExpandedCategories(categoriesWithEnabledTools);
@@ -255,14 +254,13 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar py-1 space-y-0.5">
-          {Object.keys(filteredToolsByCategory.grouped)
-            .sort()
-            .map(category => {
+          {Object.entries(filteredToolsByCategory.grouped)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([category, categoryTools]) => {
               const isPackageExpanded = expandedCategories.has(category);
               const packageIcon = packageIcons[category] || <Database className={iconSm} />;
               const packageColor = packageColors[category] || packageColors.default;
 
-              const categoryTools = filteredToolsByCategory.grouped[category];
               const toolCount = Object.keys(categoryTools).length;
               let enabledToolCount = 0;
               for (const [, toolName] of Object.entries(categoryTools)) {

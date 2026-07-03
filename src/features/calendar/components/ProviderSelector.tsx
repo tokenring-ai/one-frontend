@@ -17,7 +17,7 @@ export default function ProviderSelector({
   if (loading && availableProviders.length === 0) {
     return (
       <span className="text-2xs text-muted flex items-center gap-1">
-        <Loader2 className="w-3 h-3 animate-spin"/> Loading providers
+        <Loader2 className="w-3 h-3 animate-spin" /> Loading providers
       </span>
     );
   }
@@ -25,7 +25,7 @@ export default function ProviderSelector({
   if (availableProviders.length === 0) {
     return (
       <span className="text-2xs text-muted flex items-center gap-1">
-        <WifiOff className="w-3 h-3"/> No providers
+        <WifiOff className="w-3 h-3" /> No providers
       </span>
     );
   }
@@ -37,9 +37,9 @@ export default function ProviderSelector({
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary border border-primary rounded-lg text-xs text-muted hover:text-primary hover:border-sky-500/40 transition-all focus-ring cursor-pointer"
       >
-        <Globe className="w-3 h-3"/>
+        <Globe className="w-3 h-3" />
         <span className="font-medium text-primary max-w-32 truncate">{provider ?? "No provider"}</span>
-        <ChevronDown className="w-3 h-3"/>
+        <ChevronDown className="w-3 h-3" />
       </button>
       {open && (
         <div className="absolute top-full right-0 mt-1 w-48 bg-secondary border border-primary rounded-xl shadow-card z-50 overflow-hidden">
@@ -56,7 +56,7 @@ export default function ProviderSelector({
               }}
               className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-hover transition-colors cursor-pointer text-left focus-ring ${p === provider ? "text-sky-500 font-medium" : "text-primary"}`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p === provider ? "bg-sky-500" : "bg-transparent"}`}/>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p === provider ? "bg-sky-500" : "bg-transparent"}`} />
               {p}
             </button>
           ))}

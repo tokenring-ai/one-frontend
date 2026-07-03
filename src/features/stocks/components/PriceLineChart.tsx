@@ -37,7 +37,7 @@ export default function PriceLineChart({ rows }: PriceLineChartProps) {
   const labelCount = 6;
   const xLabelIndices = Array.from({ length: labelCount }, (_, i) => Math.round((i / (labelCount - 1)) * (dates.length - 1)));
 
-  const isUp = closes[closes.length - 1] >= closes[0];
+  const isUp = closes[closes.length - 1]! >= closes[0]!;
   const lineColor = isUp ? "#10b981" : "#ef4444";
   const fillColor = lineColor;
   const gradId = `grad-${isUp ? "up" : "dn"}`;

@@ -39,7 +39,7 @@ export default function CalendarApp() {
 
   useEffect(() => {
     const available = providers.data?.providers ?? [];
-    if (!available.length) return;
+    if (!available[0]) return;
     if (!provider || !available.includes(provider)) {
       setProvider(available[0]);
     }
@@ -106,7 +106,7 @@ export default function CalendarApp() {
       const ws = startOfWeek(cursor);
       const we = addDays(ws, 6);
       if (ws.getMonth() === we.getMonth()) return `${MONTHS[ws.getMonth()]} ${ws.getFullYear()}`;
-      return `${MONTHS[ws.getMonth()].slice(0, 3)} – ${MONTHS[we.getMonth()].slice(0, 3)} ${we.getFullYear()}`;
+      return `${MONTHS[ws.getMonth()]!.slice(0, 3)} – ${MONTHS[we.getMonth()]!.slice(0, 3)} ${we.getFullYear()}`;
     }
     return `${MONTHS[cursor.getMonth()]} ${cursor.getDate()}, ${cursor.getFullYear()}`;
   }, [view, cursor]);
@@ -197,7 +197,7 @@ export default function CalendarApp() {
             className="p-1.5 rounded-lg hover:bg-hover text-muted hover:text-primary transition-colors cursor-pointer"
             aria-label="Previous"
           >
-            <ChevronLeft size={16}/>
+            <ChevronLeft size={16} />
           </button>
           <button
             type="button"
@@ -205,7 +205,7 @@ export default function CalendarApp() {
             className="p-1.5 rounded-lg hover:bg-hover text-muted hover:text-primary transition-colors cursor-pointer"
             aria-label="Next"
           >
-            <ChevronRight size={16}/>
+            <ChevronRight size={16} />
           </button>
           <button
             type="button"
@@ -218,11 +218,11 @@ export default function CalendarApp() {
 
         {/* Title */}
         <h2 className="text-sm font-bold text-primary ml-1 flex items-center gap-2">
-          <CalendarDays size={16} className="text-sky-500"/>
+          <CalendarDays size={16} className="text-sky-500" />
           {titleLabel}
         </h2>
 
-        <div className="flex-1"/>
+        <div className="flex-1" />
 
         {/* Provider selector */}
         <ProviderSelector
@@ -255,16 +255,16 @@ export default function CalendarApp() {
           onClick={() => openNew()}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-sm"
         >
-          <Plus size={14}/> New event
+          <Plus size={14} /> New event
         </button>
       </div>
 
       {/* Calendar body */}
       {view === "month" && (
-        <MonthView year={cursor.getFullYear()} month={cursor.getMonth()} today={today} events={allEvents} onDayClick={handleDayClick} onEventClick={openEdit}/>
+        <MonthView year={cursor.getFullYear()} month={cursor.getMonth()} today={today} events={allEvents} onDayClick={handleDayClick} onEventClick={openEdit} />
       )}
-      {view === "week" && <WeekView weekStart={weekStart} today={today} events={allEvents} onSlotClick={handleSlotClick} onEventClick={openEdit}/>}
-      {view === "day" && <DayView date={cursor} today={today} events={allEvents} onSlotClick={handleSlotClick} onEventClick={openEdit}/>}
+      {view === "week" && <WeekView weekStart={weekStart} today={today} events={allEvents} onSlotClick={handleSlotClick} onEventClick={openEdit} />}
+      {view === "day" && <DayView date={cursor} today={today} events={allEvents} onSlotClick={handleSlotClick} onEventClick={openEdit} />}
 
       {/* Scheduler event modal */}
       {modalOpen && (
@@ -281,7 +281,7 @@ export default function CalendarApp() {
       )}
 
       {/* RPC calendar event detail */}
-      {rpcDetailEvent && <RpcEventDetail event={rpcDetailEvent} onClose={() => setRpcDetailEvent(null)}/>}
+      {rpcDetailEvent && <RpcEventDetail event={rpcDetailEvent} onClose={() => setRpcDetailEvent(null)} />}
     </div>
   );
 }

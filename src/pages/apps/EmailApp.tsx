@@ -456,7 +456,7 @@ function EmailBrowserPane({
   useEffect(() => {
     if (boxes.length === 0) return;
     if (boxes.some(box => box.id === selectedFolder)) return;
-    setSelectedFolder(boxes.find(box => box.id === "inbox")?.id ?? boxes[0].id);
+    setSelectedFolder(boxes.find(box => box.id === "inbox")?.id ?? boxes[0]!.id);
   }, [boxes, selectedFolder]);
 
   const handleFolderSelect = (id: string) => {
@@ -598,7 +598,11 @@ export default function EmailApp() {
   const providers = useEmailProviders();
   const [provider, setProvider] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  const { agentId, ensureAgent, assignAgent: handleAgentLaunched } = useLazyAgent({
+  const {
+    agentId,
+    ensureAgent,
+    assignAgent: handleAgentLaunched,
+  } = useLazyAgent({
     appName: "Email app",
     agentType: "email",
     headless: false,
@@ -607,8 +611,10 @@ export default function EmailApp() {
   useEffect(() => {
     const availableProviders = providers.data?.providers ?? [];
     if (!availableProviders.length) return;
-    if (!provider || !availableProviders.includes(provider)) {
-      setProvider(availableProviders[0]);
+
+    const newProvider = availableProviders?.[0];
+    if (!provider && newProvider && newProvider != provider) {
+      setProvider(newProvider);
       setSelectedMessageId(null);
     }
   }, [providers.data, provider]);

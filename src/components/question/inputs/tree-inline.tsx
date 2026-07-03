@@ -100,13 +100,13 @@ const CompactTreeNode: React.FC<{
       >
         {hasChildren ? (
           <span onClick={handleExpandClick} className="text-muted hover:text-accent transition-colors" aria-hidden="true">
-            {isExpanded ? <ChevronDown className="w-3.5 h-3.5"/> : <ChevronRight className="w-3.5 h-3.5"/>}
+            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           </span>
         ) : (
           <span className="w-3.5" aria-hidden="true"></span>
         )}
         <span className={`text-sm ${isFocused ? "text-accent font-medium" : isSelected ? "text-accent font-medium" : "text-primary"}`}>{node.name}</span>
-        {isSelectableNode && isSelected && <Check className="w-3.5 h-3.5 text-accent ml-auto" aria-hidden="true"/>}
+        {isSelectableNode && isSelected && <Check className="w-3.5 h-3.5 text-accent ml-auto" aria-hidden="true" />}
       </div>
       {isExpanded && hasChildren && (
         <div role="group">
@@ -157,7 +157,7 @@ export default function TreeInlineQuestion({ question, agentId, requestId, inter
 
   // Initialize with the first root node expanded
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => {
-    if (question.tree.length > 0) {
+    if (question.tree[0]) {
       return new Set([getTreeNodeValue(question.tree[0])]);
     }
     return new Set();
@@ -349,7 +349,7 @@ export default function TreeInlineQuestion({ question, agentId, requestId, inter
             disabled={isSubmitting}
             className="flex items-center gap-1.5 p-1.5 rounded-md text-xs text-muted hover:text-primary transition-colors disabled:opacity-50 focus-ring"
           >
-            <X className="w-3.5 h-3.5"/>
+            <X className="w-3.5 h-3.5" />
             Cancel
           </button>
           <button
@@ -359,7 +359,7 @@ export default function TreeInlineQuestion({ question, agentId, requestId, inter
             className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
           >
             {isSubmitting ? "Sending..." : "Submit"}
-            <Send className="w-3.5 h-3.5"/>
+            <Send className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

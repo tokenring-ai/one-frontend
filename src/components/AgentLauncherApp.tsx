@@ -40,10 +40,7 @@ export default function AgentLauncherApp({
   const agents = useAgentList();
   const [creating, setCreating] = useState(false);
 
-  const existingAgents = useMemo(
-    () => (agents.data ?? []).filter(agent => agent.agentType === agentType),
-    [agents.data, agentType],
-  );
+  const existingAgents = useMemo(() => (agents.data ?? []).filter(agent => agent.agentType === agentType), [agents.data, agentType]);
 
   const launch = async () => {
     setCreating(true);

@@ -147,15 +147,9 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
                 }}
                 className="flex items-center cursor-pointer py-1.5 rounded-md px-3 transition-colors group hover:bg-hover"
               >
-                <div
-                  className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${isEnabled ? "bg-accent shadow-[0_0_6px_rgba(99,102,241,0.5)]" : "bg-muted/50"}`}
-                />
+                <div className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${isEnabled ? "bg-accent shadow-[0_0_6px_rgba(99,102,241,0.5)]" : "bg-muted/50"}`} />
                 <div className="flex-1 min-w-0">
-                  <div
-                    className={`text-xs font-mono leading-tight truncate ${
-                      isEnabled ? "text-accent font-medium" : "text-muted group-hover:text-primary"
-                    }`}
-                  >
+                  <div className={`text-xs font-mono leading-tight truncate ${isEnabled ? "text-accent font-medium" : "text-muted group-hover:text-primary"}`}>
                     {agent.displayName}
                   </div>
                   {agent.description && <div className="text-2xs text-dim font-mono leading-tight truncate mt-0.5">{agent.description}</div>}

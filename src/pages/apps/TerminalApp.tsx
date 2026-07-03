@@ -1,3 +1,4 @@
+import restore from "@tokenring-ai/checkpoint/commands/agent-checkpoint/restore";
 import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { Loader2, Plus, Terminal, Trash2, Unplug } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,7 +17,7 @@ type TerminalSession = {
 
 export default function TerminalApp() {
   const terminals = useTerminalList();
-  const [activeTerminal, setActiveTerminal] = useState<string | null>(null);
+  const [activeTerminalName, setActiveTerminalName] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Record<string, TerminalSession>>({});
   const [inputValue, setInputValue] = useState("");
   const [spawning, setSpawning] = useState(false);
@@ -25,26 +26,26 @@ export default function TerminalApp() {
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeResume = activeTerminal ? sessions[activeTerminal] : undefined;
-  const outputStream = useTerminalOutput(activeTerminal, activeResume);
+  const activeResume = activeTerminalName ? sessions[activeTerminalName] : undefined;
+  const outputStream = useTerminalOutput(activeTerminalName, activeResume);
 
   useEffect(() => {
-    if (!activeTerminal || !outputStream.data) {
+    if (!activeTerminalName || !outputStream.data) {
       return;
     }
 
     setSessions(prev => ({
       ...prev,
-      [activeTerminal]: {
-        name: activeTerminal,
+      [activeTerminalName]: {
+        name: activeTerminalName,
         output: outputStream.data!.output,
         position: outputStream.data!.position,
         complete: outputStream.data!.complete,
       },
     }));
-  }, [activeTerminal, outputStream.data]);
+  }, [activeTerminalName, outputStream.data]);
 
-  const activeOutput = activeTerminal ? outputStream.data?.output ?? sessions[activeTerminal]?.output : undefined;
+  const activeOutput = activeTerminalName ? (outputStream.data?.output ?? sessions[activeTerminalName]?.output) : undefined;
   const streamError = outputStream.error ? errorAsString(outputStream.error) : null;
 
   // Auto-scroll to bottom when output changes (rAF ensures layout is updated first)
@@ -55,23 +56,37 @@ export default function TerminalApp() {
       el.scrollTop = el.scrollHeight;
     });
     return () => cancelAnimationFrame(frame);
-  }, [activeOutput, activeTerminal]);
+  }, [activeOutput, activeTerminalName]);
 
   // Focus input when switching terminals
   useEffect(() => {
-    if (activeTerminal) inputRef.current?.focus();
-  }, [activeTerminal]);
+    if (activeTerminalName) inputRef.current?.focus();
+  }, [activeTerminalName]);
 
   const connectToTerminal = useCallback((terminalName: string) => {
-    setActiveTerminal(terminalName);
+    setActiveTerminalName(terminalName);
   }, []);
 
   const spawnTerminal = async () => {
     setSpawning(true);
     try {
-      const { terminalName } = await terminalRPCClient.spawnTerminal({});
-      await terminals.mutate();
-      connectToTerminal(terminalName);
+      const result = await terminalRPCClient.spawnTerminal({});
+      switch (result.status) {
+        case "success":
+          const { terminalName } = result;
+          await terminals.mutate();
+          connectToTerminal(terminalName);
+          break;
+        case "agentNotFound":
+          toastManager.error("Agent not found", { duration: 5000 });
+          break;
+        case "providerNotFound":
+          toastManager.error("Provider not found", { duration: 5000 });
+          break;
+        default:
+          const exhaustive: any = result satisfies never;
+          throw new Error(`Unexpected status: ${exhaustive.status}`);
+      }
     } catch (error) {
       toastManager.error(errorAsString(error), { duration: 5000 });
     } finally {
@@ -85,7 +100,7 @@ export default function TerminalApp() {
     setConfirmDelete(null);
     try {
       await terminalRPCClient.terminateTerminal({ terminalName: name });
-      if (activeTerminal === name) setActiveTerminal(null);
+      if (activeTerminalName === name) setActiveTerminalName(null);
       setSessions(prev => {
         const next = { ...prev };
         delete next[name];
@@ -98,10 +113,10 @@ export default function TerminalApp() {
   };
 
   const sendInput = async () => {
-    if (!activeTerminal || !inputValue) return;
+    if (!activeTerminalName || !inputValue) return;
     try {
       await terminalRPCClient.sendInput({
-        terminalName: activeTerminal,
+        terminalName: activeTerminalName,
         input: inputValue + "\n",
       });
       setInputValue("");
@@ -110,13 +125,15 @@ export default function TerminalApp() {
     }
   };
 
-  const activeSession = activeTerminal
+  const activeSession = activeTerminalName
     ? {
-        output: outputStream.data?.output ?? sessions[activeTerminal]?.output ?? "",
-        complete: outputStream.data?.complete ?? sessions[activeTerminal]?.complete ?? false,
+        output: outputStream.data?.output ?? sessions[activeTerminalName]?.output ?? "",
+        complete: outputStream.data?.complete ?? sessions[activeTerminalName]?.complete ?? false,
       }
     : null;
-  const activeInfo = terminals.data?.terminals.find(t => t.name === activeTerminal);
+
+  const terminalList = terminals.data?.status === "success" ? terminals.data.terminals : [];
+  const activeTerminal = terminalList.find(t => t.name === activeTerminalName);
 
   if (terminals.isLoading) {
     return (
@@ -149,20 +166,20 @@ export default function TerminalApp() {
         <div className="shrink-0 w-56 border-r border-primary bg-secondary overflow-y-auto">
           <div className="px-3 pt-3 pb-1">
             <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-500/90 uppercase tracking-widest">Terminals</span>
-            <span className="text-2xs text-muted ml-2">{terminals.data?.terminals.length ?? 0}</span>
+            <span className="text-2xs text-muted ml-2">{terminalList.length ?? 0}</span>
           </div>
           <div className="p-2 space-y-1">
-            {(terminals.data?.terminals.length ?? 0) === 0 ? (
+            {(terminalList.length ?? 0) === 0 ? (
               <div className="px-3 py-6 text-center">
                 <Terminal className="w-6 h-6 text-muted mx-auto mb-2 opacity-50" />
                 <p className="text-2xs text-muted">No terminals</p>
               </div>
             ) : (
-              terminals.data!.terminals.map(t => (
+              terminalList.map(t => (
                 <div
                   key={t.name}
                   className={`group flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-all ${
-                    activeTerminal === t.name ? "bg-hover border border-emerald-500/50" : "hover:bg-hover border border-transparent"
+                    activeTerminalName === t.name ? "bg-hover border border-emerald-500/50" : "hover:bg-hover border border-transparent"
                   }`}
                 >
                   <button type="button" onClick={() => connectToTerminal(t.name)} className="flex-1 flex items-center gap-2 text-left min-w-0">
@@ -188,20 +205,20 @@ export default function TerminalApp() {
 
         {/* Main terminal area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {activeTerminal ? (
+          {activeTerminalName ? (
             <>
               {/* Terminal toolbar */}
               <div className="shrink-0 border-b border-primary bg-secondary/50 px-4 py-2 flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${activeInfo?.running ? "bg-emerald-500" : "bg-muted/50"}`} />
-                <span className="text-xs font-mono text-primary truncate">{activeInfo?.lastInput ?? activeTerminal}</span>
-                <span className="text-2xs text-muted truncate">{activeInfo?.workingDirectory}</span>
-                {activeInfo && !activeInfo.running && activeInfo.exitCode !== null && (
-                  <span className={`text-2xs font-mono ${activeInfo.exitCode === 0 ? "text-emerald-500" : "text-red-500"}`}>exit: {activeInfo.exitCode}</span>
+                <div className={`w-2 h-2 rounded-full shrink-0 ${activeTerminal?.running ? "bg-emerald-500" : "bg-muted/50"}`} />
+                <span className="text-xs font-mono text-primary truncate">{activeTerminal?.lastInput ?? activeTerminalName}</span>
+                <span className="text-2xs text-muted truncate">{activeTerminal?.workingDirectory}</span>
+                {activeTerminal && !activeTerminal.running && activeTerminal.exitCode !== null && (
+                  <span className={`text-2xs font-mono ${activeTerminal.exitCode === 0 ? "text-emerald-500" : "text-red-500"}`}>exit: {activeTerminal.exitCode}</span>
                 )}
                 <div className="flex-1" />
                 <button
                   type="button"
-                  onClick={() => setActiveTerminal(null)}
+                  onClick={() => setActiveTerminalName(null)}
                   className="p-1 text-muted hover:text-primary transition-colors focus-ring cursor-pointer rounded-md"
                   aria-label="Disconnect from terminal"
                 >
@@ -221,7 +238,8 @@ export default function TerminalApp() {
                 className="flex-1 overflow-y-auto bg-[#1a1a2e] p-4 font-mono text-xs text-green-400 whitespace-pre-wrap break-all select-text"
                 onClick={() => inputRef.current?.focus()}
               >
-                {activeSession?.output || (outputStream.isLoading ? <span className="text-muted">Connecting...</span> : <span className="text-muted">Waiting for output...</span>)}
+                {activeSession?.output ||
+                  (outputStream.isLoading ? <span className="text-muted">Connecting...</span> : <span className="text-muted">Waiting for output...</span>)}
                 {activeSession?.complete && <div className="text-muted mt-2">[Process exited]</div>}
               </div>
 

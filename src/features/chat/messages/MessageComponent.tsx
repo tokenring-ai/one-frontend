@@ -1,14 +1,5 @@
 import { motion, type Variants } from "framer-motion";
-import {
-  Check,
-  Code,
-  FileJson,
-  FileText,
-  Image as ImageIcon,
-  Info,
-  Layout,
-  Square,
-} from "lucide-react";
+import { Check, Code, FileJson, FileText, Image as ImageIcon, Info, Layout, Square } from "lucide-react";
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -101,7 +92,7 @@ export default function MessageComponent({ msg, question, response }: MessageCom
           <ArtifactDisplay artifact={msg} />
         ) : isQuestionWithResponse ? (
           <QuestionWithResponseDisplay question={pairedQuestion!} {...(response !== undefined && { response })} />
-                ) : msg.type === "input.interaction" ? (
+        ) : msg.type === "input.interaction" ? (
           <InteractionResponseDisplay msg={msg as InteractionResponseMessage} />
         ) : msg.type === "output.reasoning" ? (
           <ThinkingBlock message={msg.message} />

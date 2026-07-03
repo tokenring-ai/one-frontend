@@ -35,7 +35,7 @@ export default function MarkdownEditor({ content, onContentChange }: FileViewerP
     setPreviewMode(current => {
       const modes: PreviewMode[] = ["preview", "live", "edit"];
       const currentIndex = modes.indexOf(current);
-      return modes[(currentIndex + 1) % modes.length];
+      return modes[(currentIndex + 1) % modes.length]!;
     });
   }, []);
 

@@ -47,7 +47,7 @@ export default function DayView({
         {allDay.length > 0 && (
           <div className="ml-4 flex gap-1 flex-wrap">
             {allDay.map(ev => (
-              <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)} compact/>
+              <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)} compact />
             ))}
           </div>
         )}
@@ -75,8 +75,8 @@ export default function DayView({
               />
             ))}
             {dayEvents.map(ev => {
-              const [h, min] = ev.startTime!.split(":").map(Number);
-              const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) : [h + 1, min];
+              const [h, min] = ev.startTime!.split(":").map(Number) as [number,number];
+              const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) as [number,number] : [h + 1, min];
               const top = (h + min / 60) * HOUR_H;
               const height = Math.max((eh - h + (emin - min) / 60) * HOUR_H, 24);
               return (
@@ -94,7 +94,7 @@ export default function DayView({
                   style={{ top: `${top}px`, height: `${height}px` }}
                 >
                   <div className="flex items-center gap-1.5 truncate font-semibold">
-                    {ev.type === "workflow" ? <GitBranch size={10} className="shrink-0"/> : <Bot size={10} className="shrink-0"/>}
+                    {ev.type === "workflow" ? <GitBranch size={10} className="shrink-0" /> : <Bot size={10} className="shrink-0" />}
                     {ev.title}
                   </div>
                   {ev.startTime && (

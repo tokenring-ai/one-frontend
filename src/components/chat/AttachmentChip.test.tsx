@@ -33,7 +33,7 @@ describe("AttachmentChip", () => {
     const writeTextSpy = vi.spyOn(navigator.clipboard, "writeText").mockRejectedValueOnce(new Error("Clipboard denied"));
 
     render(<AttachmentChip attachment={textAttachment} />);
-    await user.click(screen.getByLabelText('Copy notes.txt to clipboard'));
+    await user.click(screen.getByLabelText("Copy notes.txt to clipboard"));
 
     await waitFor(() => {
       expect(writeTextSpy).toHaveBeenCalledWith("hello world");

@@ -79,7 +79,7 @@ export default function MonthView({
               </div>
               <div className="space-y-0.5">
                 {dayEvents.slice(0, showMax).map(ev => (
-                  <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)}/>
+                  <EventChip key={ev.id} event={ev} onClick={() => onEventClick(ev)} />
                 ))}
                 {overflow > 0 && (
                   <button

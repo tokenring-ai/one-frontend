@@ -21,11 +21,7 @@ export default function ViewerHeader({
           <span className="text-xs text-muted truncate font-mono">{title}</span>
           {subtitle && <span className="text-2xs text-muted shrink-0">{subtitle}</span>}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 text-muted hover:text-primary transition-colors rounded focus-ring cursor-pointer shrink-0"
-        >
+        <button type="button" onClick={onClose} className="p-1 text-muted hover:text-primary transition-colors rounded focus-ring cursor-pointer shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>

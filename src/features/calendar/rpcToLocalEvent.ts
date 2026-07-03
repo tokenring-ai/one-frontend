@@ -20,7 +20,7 @@ export function rpcToLocalEvent(ev: z.output<typeof CalendarEventSchema>): Calen
     color: "bg-accent",
     source: "rpc",
     ...(ev.description && {
-      description: ev.description
+      description: ev.description,
     }),
     ...(ev.location && {
       location: ev.location,

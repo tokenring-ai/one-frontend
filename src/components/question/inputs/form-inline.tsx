@@ -25,8 +25,8 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
   const inputRef = useRef<HTMLInputElement>(null);
 
   const section = question.sections[currentSection];
-  const fieldEntries = Object.entries(section.fields);
-  const [fieldKey, field] = fieldEntries[currentField];
+  const fieldEntries = section ? Object.entries(section.fields) : [];
+  const currentEntry = fieldEntries[currentField];
   const totalFields = fieldEntries.length;
   const isLastField = currentField === totalFields - 1;
   const isLastSection = currentSection === question.sections.length - 1;
@@ -37,12 +37,14 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
       containerRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
     // Focus on input field when it's a text field
-    if (field.type === "text" && inputRef.current) {
+    if (currentEntry?.[1].type === "text" && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [field.type]);
+  }, [currentEntry]);
 
   const handleFieldSubmit = async (value: any) => {
+    if (!section || !currentEntry) return;
+    const [fieldKey, field] = currentEntry;
     // Validate required fields
     if (field.type === "text" && field.required && !value) {
       setIsInvalid(true);
@@ -60,12 +62,14 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
       // Build final result
       const result: Record<string, Record<string, any>> = {};
       for (const sec of question.sections) {
-        result[sec.name] = {};
+        const secResult: Record<string, any> = {};
         for (const key of Object.keys(sec.fields)) {
-          result[sec.name][key] = values[`${sec.name}.${key}`];
+          secResult[key] = values[`${sec.name}.${key}`];
         }
+        result[sec.name] = secResult;
       }
-      result[section.name][fieldKey] = value;
+      const finalSection = (result[section.name] ??= {});
+      finalSection[fieldKey] = value;
 
       setIsSubmitting(true);
       await sendInteractionResponse({
@@ -87,8 +91,9 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
     if (currentField > 0) {
       setCurrentField(currentField - 1);
     } else if (currentSection > 0) {
+      const prevSection = question.sections[currentSection - 1];
       setCurrentSection(currentSection - 1);
-      setCurrentField(Object.keys(question.sections[currentSection - 1].fields).length - 1);
+      setCurrentField(prevSection ? Object.keys(prevSection.fields).length - 1 : 0);
     }
   };
 
@@ -107,6 +112,11 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
     setIsInvalid(false);
     setShowErrorAnimation(false);
   }, []);
+
+  if (!section || !currentEntry) {
+    return null;
+  }
+  const [fieldKey, field] = currentEntry;
 
   const canGoPrevious = currentSection > 0 || currentField > 0;
   const currentFieldValue = values[`${section.name}.${fieldKey}`];
@@ -175,7 +185,8 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
                 agentId={agentId}
                 requestId={requestId}
                 onSubmitValue={handleFieldSubmit}
-                onClose={() => {}}
+                onClose={() => {
+                }}
                 autoFocus={autoFocus}
               />
             </div>
@@ -192,7 +203,8 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
                 agentId={agentId}
                 requestId={requestId}
                 onSubmitValue={handleFieldSubmit}
-                onClose={() => {}}
+                onClose={() => {
+                }}
                 autoFocus={autoFocus}
               />
             </div>
@@ -209,7 +221,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
             disabled={isSubmitting}
             className="flex items-center gap-1.5 p-1.5 rounded-md text-xs text-muted hover:text-primary transition-colors disabled:opacity-50 focus-ring"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5"/>
             Cancel
           </button>
           {canGoPrevious && (
@@ -219,7 +231,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
               disabled={isSubmitting}
               className="flex items-center gap-1.5 text-xs text-primary hover:text-accent transition-colors disabled:opacity-50 bg-tertiary px-3 py-1.5 rounded-md focus-ring"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-3.5 h-3.5"/>
               Previous
             </button>
           )}
@@ -236,13 +248,13 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
           >
             {isSubmitting ? (
               <>
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
                 <span>{isLastField && isLastSection ? "Submitting..." : "Processing..."}</span>
               </>
             ) : (
               <>
                 {isLastField && isLastSection ? "Submit" : "Next"}
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3.5 h-3.5"/>
               </>
             )}
           </button>

@@ -485,12 +485,7 @@ export default function VaultApp() {
         {vault.isLoading ? (
           <LoadingState message="Loading vault…" className="py-16" />
         ) : vault.error ? (
-          <ErrorState
-            title="Failed to load vault"
-            error={vault.error}
-            onRetry={() => void vault.mutate()}
-            variant="page"
-          />
+          <ErrorState title="Failed to load vault" error={vault.error} onRetry={() => void vault.mutate()} variant="page" />
         ) : locked ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
             <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg">

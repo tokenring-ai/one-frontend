@@ -149,15 +149,9 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
         className={`fixed md:relative border-r border-primary bg-sidebar flex flex-col shrink-0 overflow-hidden h-[calc(100vh-3rem)] md:h-full transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} ${isSidebarExpanded ? "w-72" : "w-12"} top-12 left-0 md:top-auto md:left-auto z-40`}
       >
         {!localStorageAvailable && !storageBannerDismissed && isSidebarExpanded && (
-          <div
-            role="alert"
-            aria-live="polite"
-            className="shrink-0 border-b border-warning/30 bg-warning/10 px-3 py-2 flex items-start gap-2"
-          >
+          <div role="alert" aria-live="polite" className="shrink-0 border-b border-warning/30 bg-warning/10 px-3 py-2 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-            <p className="flex-1 text-2xs text-primary leading-snug">
-              Sidebar preferences will not be saved because browser storage is unavailable.
-            </p>
+            <p className="flex-1 text-2xs text-primary leading-snug">Sidebar preferences will not be saved because browser storage is unavailable.</p>
             <button
               type="button"
               onClick={() => setStorageBannerDismissed(true)}
@@ -261,12 +255,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                   {agents.isLoading ? (
                     <LoadingState size="sm" className="py-8" />
                   ) : agents.error ? (
-                    <ErrorState
-                      title="Failed to load agents"
-                      error={agents.error}
-                      onRetry={() => void agents.mutate()}
-                      variant="inline"
-                    />
+                    <ErrorState title="Failed to load agents" error={agents.error} onRetry={() => void agents.mutate()} variant="inline" />
                   ) : (agents.data?.length ?? 0) === 0 ? (
                     <div className="px-3 py-4 text-center text-muted text-2xs italic">No active agents</div>
                   ) : (
@@ -321,12 +310,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                   {agentTypes.isLoading ? (
                     <LoadingState size="sm" className="py-4" />
                   ) : agentTypes.error ? (
-                    <ErrorState
-                      title="Failed to load agent types"
-                      error={agentTypes.error}
-                      onRetry={() => void agentTypes.mutate()}
-                      variant="inline"
-                    />
+                    <ErrorState title="Failed to load agent types" error={agentTypes.error} onRetry={() => void agentTypes.mutate()} variant="inline" />
                   ) : (
                     Object.entries(groupedTemplates).map(([category, templates]) => (
                       <div key={category}>
@@ -362,12 +346,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
                 {workflows.isLoading ? (
                   <LoadingState size="sm" className="py-8" />
                 ) : workflows.error ? (
-                  <ErrorState
-                    title="Failed to load workflows"
-                    error={workflows.error}
-                    onRetry={() => void workflows.mutate()}
-                    variant="inline"
-                  />
+                  <ErrorState title="Failed to load workflows" error={workflows.error} onRetry={() => void workflows.mutate()} variant="inline" />
                 ) : (workflows.data?.length ?? 0) === 0 ? (
                   <div className="px-3 py-4 text-center text-muted text-2xs italic">No workflows available</div>
                 ) : (

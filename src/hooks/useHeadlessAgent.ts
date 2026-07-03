@@ -34,15 +34,7 @@ export function useHeadlessAgent(options: UseHeadlessAgentOptions): UseHeadlessA
   const agentRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const {
-      appName,
-      preferredTypes,
-      resolvePreferred,
-      noTypesMessage = "No agent types available",
-      onNoTypes,
-      onError,
-      headless = true,
-    } = optionsRef.current;
+    const { appName, preferredTypes, resolvePreferred, noTypesMessage = "No agent types available", onNoTypes, onError, headless = true } = optionsRef.current;
 
     let cancelled = false;
     void (async () => {

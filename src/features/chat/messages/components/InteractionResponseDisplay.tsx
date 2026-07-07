@@ -20,7 +20,7 @@ export default function InteractionResponseDisplay({ msg }: { msg: InteractionRe
   } else if (typeof result === "object") {
     displayText = JSON.stringify(result, null, 2);
   } else {
-    displayText = String(result);
+    displayText = `Unknown result: ${typeof result}`;
   }
 
   return (

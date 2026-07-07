@@ -1,5 +1,5 @@
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Check, Copy, Download, File, FileCode, FileJson, FileText, Image as ImageIcon, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { toastManager } from "../ui/toast.tsx";
@@ -195,9 +195,9 @@ function downloadAttachment(attachment: BaseAttachment) {
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    blob = new Blob([bytes], { type: attachment.mimeType || "application/octet-stream" });
+    blob = new Blob([bytes], { type: attachment.mimeType });
   } else {
-    blob = new Blob([attachment.body], { type: attachment.mimeType || "text/plain" });
+    blob = new Blob([attachment.body], { type: attachment.mimeType });
   }
 
   const url = URL.createObjectURL(blob);
@@ -254,7 +254,7 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
     try {
       downloadAttachment(attachment);
     } catch (error: unknown) {
-      toastManager.error(`Failed to download "${attachment.name}": ${errorAsString(error)}`, { duration: 5000 });
+      toastManager.error(`Failed to download "${attachment.name}": ${formatError(error)}`, { duration: 5000 });
     } finally {
       setTimeout(() => setDownloading(false), 1000);
     }
@@ -273,7 +273,7 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error: unknown) {
-      toastManager.error(`Failed to copy "${attachment.name}" to clipboard: ${errorAsString(error)}`, { duration: 5000 });
+      toastManager.error(`Failed to copy "${attachment.name}" to clipboard: ${formatError(error)}`, { duration: 5000 });
     }
   };
 

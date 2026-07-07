@@ -11,7 +11,7 @@ export default function QuestionWithResponseDisplay({ question, response }: { qu
     if (Array.isArray(result)) {
       if (result.length === 0) return "Nothing selected";
       if (result.length === 1) {
-        const item = result[0];
+        const item = result[0] as unknown;
         return typeof item === "string" ? item : JSON.stringify(item);
       }
       return result.map(item => String(item)).join(", ");

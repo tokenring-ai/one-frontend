@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { agentRPCClient } from "../rpc.ts";
-import { createInitialAgentEventStreamState, reduceAgentEventStreamChunk, type RemoteAgentStatus } from "./agentEventStreamReducer.ts";
+import { createInitialAgentEventStreamState, type RemoteAgentStatus, reduceAgentEventStreamChunk } from "./agentEventStreamReducer.ts";
 import { useRPCStream } from "./useRPCStream.ts";
 
 export type { RemoteAgentStatus };

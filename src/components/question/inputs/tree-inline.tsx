@@ -153,7 +153,7 @@ export default function TreeInlineQuestion({ question, agentId, requestId, inter
     return values.filter(isValueInTree);
   };
 
-  const [selected, setSelected] = useState<Set<string>>(new Set(filterSelectableDefaults(question.defaultValue ?? [])));
+  const [selected, setSelected] = useState<Set<string>>(new Set(filterSelectableDefaults(question.defaultValue)));
 
   // Initialize with the first root node expanded
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => {
@@ -174,7 +174,7 @@ export default function TreeInlineQuestion({ question, agentId, requestId, inter
   useEffect(() => {
     if (autoFocus && containerRef.current) {
       containerRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      const firstFocusable = containerRef.current.querySelector("[data-tree-value]") as HTMLElement;
+      const firstFocusable = containerRef.current.querySelector("[data-tree-value]") as HTMLElement | null;
       if (firstFocusable) {
         firstFocusable.focus();
         const value = firstFocusable.getAttribute("data-tree-value");

@@ -1,3 +1,4 @@
+import formatError from "@tokenring-ai/utility/error/formatError";
 import {
   BookOpen,
   CalendarDays,
@@ -6,6 +7,7 @@ import {
   FolderOpen,
   GitBranch,
   Image,
+  Loader2,
   Lock,
   Mail,
   MessageSquare,
@@ -18,8 +20,6 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
-import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CheckpointBrowser from "../components/CheckpointBrowser.tsx";
 import AppCard, { type AppCardDef } from "../components/dashboard/AppCard.tsx";
@@ -199,7 +199,7 @@ export default function Dashboard() {
               ) : agents.error ? (
                 <>
                   <div className="w-2 h-2 rounded-full bg-warning" />
-                  <span className="text-xs text-warning" title={errorAsString(agents.error)}>
+                  <span className="text-xs text-warning" title={formatError(agents.error)}>
                     Unable to load agents
                   </span>
                 </>

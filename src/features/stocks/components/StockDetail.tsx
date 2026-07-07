@@ -3,7 +3,7 @@ import type React from "react";
 import { useState } from "react";
 import { useStockPriceHistory, useStockPriceTicks, useStockQuote } from "../../../rpc.ts";
 import { changeSign, fmt, fmtPrice, fmtTs } from "../formatters.ts";
-import type { StockPriceHistoryRow, Tab } from "../types.ts";
+import type { Tab } from "../types.ts";
 import AskAIModal from "./AskAIModal.tsx";
 import ChartTab from "./ChartTab.tsx";
 import HistoryTab from "./HistoryTab.tsx";
@@ -23,7 +23,7 @@ export default function StockDetail({ symbol, onClear }: StockDetailProps) {
   const history = useStockPriceHistory(symbol);
   const ticks = useStockPriceTicks(symbol);
 
-  const quoteRow = quote.data?.rows?.[0] ?? null;
+  const quoteRow = quote.data?.rows[0];
 
   const price = quoteRow?.Price;
   const change = quoteRow?.Change;
@@ -126,12 +126,7 @@ export default function StockDetail({ symbol, onClear }: StockDetailProps) {
       </div>
 
       {showAskAI && (
-        <AskAIModal
-          symbol={symbol}
-          quoteData={quoteRow}
-          historyRows={history.data?.rows ?? (ticks.data?.rows as unknown as StockPriceHistoryRow[]) ?? []}
-          onClose={() => setShowAskAI(false)}
-        />
+        <AskAIModal symbol={symbol} quoteData={quoteRow} historyRows={history.data?.rows} intradayRows={ticks.data?.rows} onClose={() => setShowAskAI(false)} />
       )}
     </div>
   );

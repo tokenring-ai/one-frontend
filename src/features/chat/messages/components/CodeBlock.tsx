@@ -10,7 +10,7 @@ export default function CodeBlock({ children, className }: { children: string; c
       await navigator.clipboard.writeText(children);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to copy:", err);
     }
   };

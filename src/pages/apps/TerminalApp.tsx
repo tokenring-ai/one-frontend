@@ -1,5 +1,4 @@
-import restore from "@tokenring-ai/checkpoint/commands/agent-checkpoint/restore";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2, Plus, Terminal, Trash2, Unplug } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ConfirmDialog from "../../components/overlay/confirm-dialog.tsx";
@@ -46,7 +45,7 @@ export default function TerminalApp() {
   }, [activeTerminalName, outputStream.data]);
 
   const activeOutput = activeTerminalName ? (outputStream.data?.output ?? sessions[activeTerminalName]?.output) : undefined;
-  const streamError = outputStream.error ? errorAsString(outputStream.error) : null;
+  const streamError = outputStream.error ? formatError(outputStream.error) : null;
 
   // Auto-scroll to bottom when output changes (rAF ensures layout is updated first)
   useEffect(() => {
@@ -72,23 +71,25 @@ export default function TerminalApp() {
     try {
       const result = await terminalRPCClient.spawnTerminal({});
       switch (result.status) {
-        case "success":
+        case "success": {
           const { terminalName } = result;
           await terminals.mutate();
           connectToTerminal(terminalName);
           break;
+        }
         case "agentNotFound":
           toastManager.error("Agent not found", { duration: 5000 });
           break;
         case "providerNotFound":
           toastManager.error("Provider not found", { duration: 5000 });
           break;
-        default:
+        default: {
           const exhaustive: any = result satisfies never;
           throw new Error(`Unexpected status: ${exhaustive.status}`);
+        }
       }
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setSpawning(false);
     }
@@ -108,7 +109,7 @@ export default function TerminalApp() {
       });
       await terminals.mutate();
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     }
   };
 
@@ -121,7 +122,7 @@ export default function TerminalApp() {
       });
       setInputValue("");
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     }
   };
 
@@ -166,15 +167,10 @@ export default function TerminalApp() {
         <div className="shrink-0 w-56 border-r border-primary bg-secondary overflow-y-auto">
           <div className="px-3 pt-3 pb-1">
             <span className="text-2xs font-bold text-emerald-600 dark:text-emerald-500/90 uppercase tracking-widest">Terminals</span>
-            <span className="text-2xs text-muted ml-2">{terminalList.length ?? 0}</span>
+            <span className="text-2xs text-muted ml-2">{terminalList.length}</span>
           </div>
           <div className="p-2 space-y-1">
-            {(terminalList.length ?? 0) === 0 ? (
-              <div className="px-3 py-6 text-center">
-                <Terminal className="w-6 h-6 text-muted mx-auto mb-2 opacity-50" />
-                <p className="text-2xs text-muted">No terminals</p>
-              </div>
-            ) : (
+            {terminalList[0] ? (
               terminalList.map(t => (
                 <div
                   key={t.name}
@@ -199,6 +195,11 @@ export default function TerminalApp() {
                   </button>
                 </div>
               ))
+            ) : (
+              <div className="px-3 py-6 text-center">
+                <Terminal className="w-6 h-6 text-muted mx-auto mb-2 opacity-50" />
+                <p className="text-2xs text-muted">No terminals</p>
+              </div>
             )}
           </div>
         </div>
@@ -213,7 +214,9 @@ export default function TerminalApp() {
                 <span className="text-xs font-mono text-primary truncate">{activeTerminal?.lastInput ?? activeTerminalName}</span>
                 <span className="text-2xs text-muted truncate">{activeTerminal?.workingDirectory}</span>
                 {activeTerminal && !activeTerminal.running && activeTerminal.exitCode !== null && (
-                  <span className={`text-2xs font-mono ${activeTerminal.exitCode === 0 ? "text-emerald-500" : "text-red-500"}`}>exit: {activeTerminal.exitCode}</span>
+                  <span className={`text-2xs font-mono ${activeTerminal.exitCode === 0 ? "text-emerald-500" : "text-red-500"}`}>
+                    exit: {activeTerminal.exitCode}
+                  </span>
                 )}
                 <div className="flex-1" />
                 <button

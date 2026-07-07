@@ -1,9 +1,9 @@
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { FocusTrap } from "focus-trap-react";
 import { Check, ChevronRight, Download, Edit, Eye, EyeOff, File, Folder, Plus, Save, Search, Trash2, X } from "lucide-react";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import CodeEditor from "../../components/editor/CodeEditor.tsx";
 import MarkdownEditor from "../../components/editor/MarkdownEditor.tsx";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { toastManager } from "../../components/ui/toast.tsx";
 import { cn } from "../../lib/utils.ts";
 import { filesystemRPCClient, useDirectoryListing, useFileContents, useFilesystemState } from "../../rpc.ts";
@@ -150,7 +150,7 @@ export default function FileBrowserOverlay({ agentId, isOpen, onClose }: FileBro
       await filesystemRPCClient.writeFile({ path: fileToSave, content: contentToSave, provider });
       await fileContent.mutate();
     } catch (error: unknown) {
-      toastManager.error(`Failed to save "${getBasename(fileToSave)}": ${errorAsString(error)}`, { duration: 5000 });
+      toastManager.error(`Failed to save "${getBasename(fileToSave)}": ${formatError(error)}`, { duration: 5000 });
     } finally {
       setIsSaving(false);
     }
@@ -206,7 +206,7 @@ export default function FileBrowserOverlay({ agentId, isOpen, onClose }: FileBro
         }
       }
     } catch (error: unknown) {
-      toastManager.error(`Failed to open "${getBasename(file)}": ${errorAsString(error)}`, { duration: 5000 });
+      toastManager.error(`Failed to open "${getBasename(file)}": ${formatError(error)}`, { duration: 5000 });
     }
   };
 
@@ -248,7 +248,7 @@ export default function FileBrowserOverlay({ agentId, isOpen, onClose }: FileBro
       a.click();
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
-      toastManager.error(`Failed to download "${getBasename(cleanFile)}": ${errorAsString(error)}`, { duration: 5000 });
+      toastManager.error(`Failed to download "${getBasename(cleanFile)}": ${formatError(error)}`, { duration: 5000 });
     }
   };
 

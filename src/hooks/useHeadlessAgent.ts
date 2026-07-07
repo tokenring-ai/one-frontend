@@ -1,8 +1,8 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { useEffect, useRef, useState } from "react";
-import { resolvePreferredAgentType, type AgentTypeInfo } from "./agentTypeUtils.ts";
 import { cleanupAgent } from "../lib/agentCleanup.ts";
 import { agentRPCClient } from "../rpc.ts";
+import { type AgentTypeInfo, resolvePreferredAgentType } from "./agentTypeUtils.ts";
 
 export type { AgentTypeInfo } from "./agentTypeUtils.ts";
 export { resolvePreferredAgentType } from "./agentTypeUtils.ts";
@@ -36,15 +36,17 @@ export function useHeadlessAgent(options: UseHeadlessAgentOptions): UseHeadlessA
   useEffect(() => {
     const { appName, preferredTypes, resolvePreferred, noTypesMessage = "No agent types available", onNoTypes, onError, headless = true } = optionsRef.current;
 
-    let cancelled = false;
+    let abortController = new AbortController();
     void (async () => {
       try {
         const types = await agentRPCClient.getAgentTypes({});
-        if (cancelled) return;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
+        if (abortController.signal.aborted) return;
 
         const preferred = resolvePreferredAgentType(types, preferredTypes, resolvePreferred);
         if (!preferred) {
-          if (!cancelled) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
+          if (!abortController.signal.aborted) {
             setError(noTypesMessage);
             onNoTypes?.(noTypesMessage);
             setInitialising(false);
@@ -53,25 +55,28 @@ export function useHeadlessAgent(options: UseHeadlessAgentOptions): UseHeadlessA
         }
 
         const { id } = await agentRPCClient.createAgent({ agentType: preferred.type, headless });
-        if (cancelled) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
+        if (abortController.signal.aborted) {
           cleanupAgent(id, `${appName} cancelled during init`);
           return;
         }
         agentRef.current = id;
         setAgentId(id);
       } catch (e: unknown) {
-        if (!cancelled) {
-          const message = errorAsString(e);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
+        if (!abortController.signal.aborted) {
+          const message = formatError(e);
           setError(message);
           onError?.(message);
         }
       } finally {
-        if (!cancelled) setInitialising(false);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
+        if (!abortController.signal.aborted) setInitialising(false);
       }
     })();
 
     return () => {
-      cancelled = true;
+      abortController.abort();
       if (agentRef.current) {
         cleanupAgent(agentRef.current, `${appName} unmounted`);
         agentRef.current = null;

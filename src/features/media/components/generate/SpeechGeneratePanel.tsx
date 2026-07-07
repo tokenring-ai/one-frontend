@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Mic } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toastManager } from "../../../../components/ui/toast.tsx";
@@ -50,8 +50,8 @@ export default function SpeechGeneratePanel({ agentId, onGenerated }: { agentId:
       } else {
         toastManager.error("Agent not found", { duration: 4000 });
       }
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setGenerating(false);
     }

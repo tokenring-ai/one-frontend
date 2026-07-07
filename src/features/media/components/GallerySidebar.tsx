@@ -1,5 +1,4 @@
-import type { AudioIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
-import type { ImageIndexEntry, VideoIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
+import type { AudioIndexEntry, ImageIndexEntry, VideoIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
 import { FileMusic, ImageIcon, Loader2, RefreshCw, Search, Video as VideoIcon, X } from "lucide-react";
 import type { MediaEntry, MediaKind } from "../types.ts";
 import AudioThumbnail from "./thumbnails/AudioThumbnail.tsx";

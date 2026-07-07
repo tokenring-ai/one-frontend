@@ -31,7 +31,7 @@ export default function MonthView({
   const byDate = useMemo(() => {
     const m: Record<string, CalendarEvent[]> = {};
     for (const ev of events) {
-      (m[ev.date] ||= []).push(ev);
+      (m[ev.date] ??= []).push(ev);
     }
     return m;
   }, [events]);

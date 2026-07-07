@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { agentRPCClient, useAgentTypes } from "../rpc.ts";
@@ -41,7 +41,7 @@ export default function AgentLauncherBar({ defaultAgentType, buttonLabel, button
       const { id } = await agentRPCClient.createAgent({ agentType: selectedType, headless: false });
       onLaunch(id);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setLaunching(false);
     }

@@ -1,6 +1,5 @@
-import type { AudioIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
-import type { ImageIndexEntry, VideoIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
+import type { AudioIndexEntry, ImageIndexEntry, VideoIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { ImageIcon } from "lucide-react";
 import { useState } from "react";
 import AgentLauncherBar from "../../components/AgentLauncherBar.tsx";
@@ -8,11 +7,11 @@ import ChatPanel from "../../components/chat/ChatPanel.tsx";
 import FilterTabs, { type FilterTabOption } from "../../components/ui/FilterTabs.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 import { agentRPCClient, useAudios, useImages, useVideos } from "../../rpc.ts";
 import GallerySidebar from "./components/GallerySidebar.tsx";
 import RightPanel from "./components/RightPanel.tsx";
 import { AGENT_TYPE_PREFERENCES } from "./constants.ts";
-import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 import type { MediaEntry, MediaKind } from "./types.ts";
 
 export default function MediaApp() {
@@ -55,8 +54,8 @@ export default function MediaApp() {
       if (!preferred) return;
       const { id } = await agentRPCClient.createAgent({ agentType: preferred.type, headless: false });
       setChatAgentId(id);
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 4000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 4000 });
     }
   };
 

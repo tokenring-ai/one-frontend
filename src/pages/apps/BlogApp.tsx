@@ -1,6 +1,6 @@
 import type { BlogPost, BlogPostListItem } from "@tokenring-ai/blog/BlogProvider";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { formatDate } from "@tokenring-ai/utility/date/formatDate";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { BookOpen, Calendar, ChevronDown, ExternalLink, FilePlus, Globe, Image, Loader2, Pencil, RefreshCw, Tag, WifiOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import AgentLauncherBar from "../../components/AgentLauncherBar.tsx";
@@ -28,7 +28,7 @@ const STATUS_STYLES: Record<PostStatus, { label: string; dot: string; badge: str
 };
 
 function StatusBadge({ status }: { status: PostStatus }) {
-  const s = STATUS_STYLES[status] ?? STATUS_STYLES.draft;
+  const s = STATUS_STYLES[status];
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium border ${s.badge}`}>
       <span className={`w-1 h-1 rounded-full ${s.dot}`} />
@@ -60,8 +60,8 @@ function BlogSelector({
     try {
       await blogRPCClient.updateBlogState({ agentId, selectedProvider: name });
       onProviderChange(name);
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 4000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 4000 });
     } finally {
       setSwitching(false);
     }
@@ -193,8 +193,8 @@ function PostViewer({
       await blogRPCClient.updatePost({ provider, id: post.id, updatedData: { status: "published" } });
       toastManager.success("Post published!", { duration: 3000 });
       onRefresh();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setPublishing(false);
     }
@@ -545,8 +545,8 @@ export default function BlogApp() {
     setLaunchingNew(true);
     try {
       await handleWorkOnPost("");
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setLaunchingNew(false);
     }

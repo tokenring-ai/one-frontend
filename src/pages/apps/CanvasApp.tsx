@@ -1,5 +1,5 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import Editor from "@monaco-editor/react";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2, PenTool, Play, Plus, Save, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -9,9 +9,9 @@ import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
 import { useOwnedAgent } from "../../hooks/useOwnedAgent.ts";
-import { sanitizeCanvasHtml } from "../../lib/sanitizeHtml.ts";
 import { useTheme } from "../../hooks/useTheme.ts";
-import { agentRPCClient, filesystemRPCClient, useFilesystemProviders } from "../../rpc.ts";
+import { sanitizeCanvasHtml } from "../../lib/sanitizeHtml.ts";
+import { filesystemRPCClient, useFilesystemProviders } from "../../rpc.ts";
 
 const DEFAULT_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -204,7 +204,7 @@ function CanvasWorkspace({ fileState }: { fileState?: FileState | null }) {
       setSavedContent(htmlContent);
       toastManager.success("Saved", { duration: 2000 });
     } catch (e: unknown) {
-      toastManager.error(errorAsString(e), { duration: 4000 });
+      toastManager.error(formatError(e), { duration: 4000 });
     } finally {
       setIsSaving(false);
     }

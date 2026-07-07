@@ -1,7 +1,7 @@
 import { formatDate } from "@tokenring-ai/utility/date/formatDate";
 import { formatTime } from "@tokenring-ai/utility/date/formatTime";
 import { formatTimeAgo } from "@tokenring-ai/utility/date/formatTimeAgo";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight, History, Loader2, RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -92,7 +92,7 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
   // Scroll highlighted item into view
   useEffect(() => {
     if (highlightedIndex >= 0 && isOpen) {
-      const highlightedItem = containerRef.current?.querySelectorAll("[data-checkpoint-item]")[highlightedIndex] as HTMLElement;
+      const highlightedItem = containerRef.current?.querySelectorAll("[data-checkpoint-item]")[highlightedIndex] as HTMLElement | null;
       if (highlightedItem) {
         highlightedItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
@@ -111,13 +111,14 @@ export default function CheckpointBrowser({ agents }: CheckpointBrowserProps) {
         case "checkpointNotFound":
           toastManager.error("Checkpoint not found", { duration: 3000 });
           break;
-        default:
+        default: {
           const exhaustive: any = result satisfies never;
           toastManager.error(`Failed to launch agent from checkpoint, unknown result: ${exhaustive.status}`, { duration: 3000 });
           break;
+        }
       }
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setLaunchingId(null);
     }

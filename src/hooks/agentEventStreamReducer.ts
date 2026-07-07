@@ -108,11 +108,13 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
       case "toolCall":
         appendMessage(event);
         break;
-      case "agent.status": {
-        currentAgentStatus = event;
-        const requestId = event.inputExecutionQueue[0];
-        currentExecutionState = requestId ? inputExecutions.get(requestId) : undefined;
-      } break;
+      case "agent.status":
+        {
+          currentAgentStatus = event;
+          const requestId = event.inputExecutionQueue[0];
+          currentExecutionState = requestId ? inputExecutions.get(requestId) : undefined;
+        }
+        break;
       case "input.execution":
         if (event.status === "finished") {
           inputExecutions.delete(event.requestId);

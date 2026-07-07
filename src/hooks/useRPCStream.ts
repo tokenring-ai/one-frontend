@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const DEFAULT_RECONNECT_OPTIONS = {
@@ -117,7 +117,7 @@ export function useRPCStream<TChunk, TData = TChunk>(options: UseRPCStreamOption
     const reconnectOpts = { ...DEFAULT_RECONNECT_OPTIONS, ...reconnectOptions };
     let reconnectDelay = reconnectOpts.initialDelay;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-    let stopped = false;
+    let stopped: boolean = false;
 
     if (prevKeyRef.current !== key) {
       const seed = resolveInitialData(initialDataRef.current);
@@ -154,6 +154,7 @@ export function useRPCStream<TChunk, TData = TChunk>(options: UseRPCStreamOption
           setError(null);
 
           for await (const chunk of subscribeRef.current(abortController.signal)) {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
             if (abortController.signal.aborted || stopped) return;
 
             if (shouldStopRef.current?.(chunk)) {
@@ -169,9 +170,10 @@ export function useRPCStream<TChunk, TData = TChunk>(options: UseRPCStreamOption
             applyChunk(chunk);
           }
         } catch (streamError: unknown) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be mutated asynchronously
           if (abortController.signal.aborted || stopped) return;
 
-          const errorMessage = errorAsString(streamError);
+          const errorMessage = formatError(streamError);
           onErrorRef.current?.(streamError);
           setError(errorMessage);
           setIsConnecting(false);

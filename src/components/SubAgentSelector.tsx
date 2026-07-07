@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Bot, Check, Loader2, Search, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { tasksRPCClient, useAvailableSubAgents, useEnabledSubAgents } from "../rpc.ts";
@@ -23,7 +23,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
 
   const agents = availableSubAgents.data?.agents;
   const agentCount = agents?.length ?? 0;
-  const enabledCount = enabledSubAgentsData?.agents?.length ?? 0;
+  const enabledCount = enabledSubAgentsData?.agents.length ?? 0;
   const allEnabled = agentCount > 0 && enabledCount === agentCount;
 
   const handleToggleAgent = useCallback(
@@ -38,7 +38,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
         }
         void enabledSubAgents.mutate();
       } catch (error: unknown) {
-        toastManager.error(errorAsString(error), { duration: 5000 });
+        toastManager.error(formatError(error), { duration: 5000 });
       } finally {
         setLoadingAgent(null);
       }
@@ -115,7 +115,7 @@ export default function SubAgentSelector({ agentId, triggerVariant = "default" }
                   }
                   void enabledSubAgents.mutate();
                 } catch (error: unknown) {
-                  toastManager.error(errorAsString(error), { duration: 5000 });
+                  toastManager.error(formatError(error), { duration: 5000 });
                 } finally {
                   setLoadingAll(false);
                 }

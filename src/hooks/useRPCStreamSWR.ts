@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useRPCStream, type UseRPCStreamOptions } from "./useRPCStream.ts";
+import { type UseRPCStreamOptions, useRPCStream } from "./useRPCStream.ts";
 
 export type RPCStreamSWRResult<TData> = {
   data: TData | undefined;

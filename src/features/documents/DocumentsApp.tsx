@@ -1,9 +1,10 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { AlertTriangle, Eye, FileText, Loader2, Save, Sparkles } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 import { cn } from "../../lib/utils.ts";
 import { filesystemRPCClient, useFilesystemProviders } from "../../rpc.ts";
 import AIEditPanel from "./components/AIEditPanel.tsx";
@@ -11,7 +12,6 @@ import MarkdownPreview from "./components/MarkdownPreview.tsx";
 import SaveAsModal from "./components/SaveAsModal.tsx";
 import { INITIAL_CONTENT } from "./constants.ts";
 import { useAIEdit } from "./hooks/useAIEdit.ts";
-import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 import type { RightPanel, TextSelection } from "./types.ts";
 
 export default function DocumentsApp() {
@@ -77,7 +77,7 @@ export default function DocumentsApp() {
       setSavedContent(content);
       toastManager.success("Saved", { duration: 2000 });
     } catch (e: unknown) {
-      toastManager.error(errorAsString(e), { duration: 4000 });
+      toastManager.error(formatError(e), { duration: 4000 });
     } finally {
       setIsSaving(false);
     }

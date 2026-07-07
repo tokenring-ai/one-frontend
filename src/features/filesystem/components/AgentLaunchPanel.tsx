@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +31,7 @@ export default function AgentLaunchPanel({ selectedPaths, onClear }: AgentLaunch
       await Promise.all(Array.from(selectedPaths).map(file => filesystemRPCClient.addFileToChat({ agentId: newAgentId, file })));
       void navigate(`/agent/${newAgentId}`);
     } catch (e: unknown) {
-      toastManager.error(errorAsString(e), { duration: 5000 });
+      toastManager.error(formatError(e), { duration: 5000 });
     } finally {
       setLaunching(false);
     }

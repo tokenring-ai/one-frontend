@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import {
   AlertTriangle,
   BookOpen,
@@ -25,7 +25,8 @@ import {
   User,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { agentRPCClient, type useAgentList, type useAgentTypes, type useWorkflows, workflowRPCClient } from "../rpc";
 import ConfirmDialog from "./overlay/confirm-dialog.tsx";
@@ -91,7 +92,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
       await agents.mutate();
       navigateAndClose(`/agent/${id}`);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     }
   };
 
@@ -101,7 +102,7 @@ export default function Sidebar({ currentAgentId, agents, workflows, agentTypes 
       await agents.mutate();
       navigateAndClose(`/agent/${id}`);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     }
   };
 

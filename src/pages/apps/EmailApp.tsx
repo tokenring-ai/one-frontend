@@ -24,8 +24,8 @@ import AgentLauncherBar from "../../components/AgentLauncherBar.tsx";
 import ChatPanel from "../../components/chat/ChatPanel.tsx";
 import FilterTabs, { type FilterTabOption } from "../../components/ui/FilterTabs.tsx";
 import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
-import { cn } from "../../lib/utils.ts";
 import { useLazyAgent } from "../../hooks/useLazyAgent.ts";
+import { cn } from "../../lib/utils.ts";
 import { agentRPCClient, emailRPCClient, useEmailBoxes, useEmailMessage, useEmailMessages, useEmailProviders, useEmailSearch } from "../../rpc.ts";
 
 const BOX_META = {
@@ -53,7 +53,7 @@ function senderName(msg: EmailMessage): string {
 
 function getBoxPresentation(box: EmailBoxRecord) {
   const normalized = box.id.toLowerCase();
-  const meta = BOX_META[normalized as keyof typeof BOX_META] ?? { icon: Mail, color: "text-muted" };
+  const meta = normalized in BOX_META ? BOX_META[normalized as keyof typeof BOX_META] : { icon: Mail, color: "text-muted" };
 
   return {
     ...meta,
@@ -612,8 +612,8 @@ export default function EmailApp() {
     const availableProviders = providers.data?.providers ?? [];
     if (!availableProviders.length) return;
 
-    const newProvider = availableProviders?.[0];
-    if (!provider && newProvider && newProvider != provider) {
+    const newProvider = availableProviders[0];
+    if (!provider && newProvider && newProvider !== provider) {
       setProvider(newProvider);
       setSelectedMessageId(null);
     }
@@ -624,8 +624,8 @@ export default function EmailApp() {
     emailRPCClient
       .updateEmailState({
         agentId,
-        ...(provider !== null && provider !== undefined && { selectedProvider: provider }),
-        ...(selectedMessageId !== null && selectedMessageId !== undefined && { selectedMessageId }),
+        ...(provider !== null && { selectedProvider: provider }),
+        ...(selectedMessageId !== null && { selectedMessageId }),
       })
       .catch(() => {});
   }, [agentId, provider, selectedMessageId]);

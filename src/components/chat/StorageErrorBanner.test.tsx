@@ -10,7 +10,7 @@ function ChatInputWriter() {
 
   useEffect(() => {
     setInput("agent-1", "draft message");
-  }, []);
+  }, [setInput]);
 
   return null;
 }

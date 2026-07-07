@@ -1,17 +1,18 @@
 import { FolderOpen, Search, X } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
-import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import ErrorState from "../../components/ui/ErrorState.tsx";
 import LoadingState from "../../components/ui/LoadingState.tsx";
+import ResizableSplit from "../../components/ui/ResizableSplit.tsx";
 import { toastManager } from "../../components/ui/toast.tsx";
+import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 import { filesystemRPCClient, useDirectoryListing, useFileContents, useFilesystemProviders } from "../../rpc.ts";
 import AgentLaunchPanel from "./components/AgentLaunchPanel.tsx";
 import BreadcrumbBar from "./components/BreadcrumbBar.tsx";
 import FileEditorPane from "./components/FileEditorPane.tsx";
 import FileListPane from "./components/FileListPane.tsx";
 import PreviewMetadataPane from "./components/PreviewMetadataPane.tsx";
-import { useHeadlessAgent } from "../../hooks/useHeadlessAgent.ts";
 
 export default function FilesApp() {
   const { agentId, initialising, error } = useHeadlessAgent({

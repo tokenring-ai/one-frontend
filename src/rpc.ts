@@ -23,7 +23,7 @@ import VideoRpcSchema from "@tokenring-ai/video/rpc/schema";
 import createWsRPCClient from "@tokenring-ai/web-host/createWsRPCClient";
 import WorkflowRpcSchema from "@tokenring-ai/workflow/rpc/schema";
 import { useEffect, useRef } from "react";
-import useSWR, { Fetcher, Key, SWRConfiguration, SWRResponse } from "swr";
+import useSWR, { type Fetcher, type Key, type SWRConfiguration, type SWRResponse } from "swr";
 import { useAgentStatusStream, useRPCStreamSWR } from "./hooks/useRPCStreamSWR.ts";
 
 export function useTypedSWR<Data = unknown, Err extends Error = Error, SWRKey extends Key = Key>(
@@ -148,13 +148,15 @@ export function useEnabledHooks(agentId: string) {
 export function useAvailableSubAgents(agentId: string) {
   return useTypedSWR(agentId ? `/tasks/getAvailableSubAgents/${agentId}` : null, async () => {
     const result = await tasksRPCClient.getAvailableSubAgents({ agentId });
-    if (result.status === "success") {
-      return { agents: result.agents };
+    switch (result.status) {
+      case "success":
+        return { agents: result.agents };
+      case "agentNotFound":
+        throw new Error(`Agent not found: ${agentId}`);
+      default:
+        const exhaustive: any = result satisfies never;
+        throw new Error(`Unexpected result status: ${exhaustive.status}`);
     }
-    if (result.status === "agentNotFound") {
-      throw new Error(`Agent not found: ${agentId}`);
-    }
-    return { agents: [] };
   });
 }
 

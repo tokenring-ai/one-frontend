@@ -36,7 +36,7 @@ export default function WeekView({
       if (!ev.startTime) continue;
       const hour = parseInt(ev.startTime.split(":")[0]!, 10);
       const k = `${ev.date}:${hour}`;
-      (m[k] ||= []).push(ev);
+      (m[k] ??= []).push(ev);
     }
     return m;
   }, [events]);
@@ -44,7 +44,7 @@ export default function WeekView({
   const allDayByDate = useMemo(() => {
     const m: Record<string, CalendarEvent[]> = {};
     for (const ev of events) {
-      if (ev.allDay || !ev.startTime) (m[ev.date] ||= []).push(ev);
+      if (ev.allDay || !ev.startTime) (m[ev.date] ??= []).push(ev);
     }
     return m;
   }, [events]);
@@ -114,7 +114,7 @@ export default function WeekView({
                   .flatMap(([, evs]) => evs)
                   .map(ev => {
                     const [h, min] = ev.startTime!.split(":").map(Number) as [number, number];
-                    const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) as [number, number] : [h + 1, min];
+                    const [eh, emin] = ev.endTime ? (ev.endTime.split(":").map(Number) as [number, number]) : [h + 1, min];
                     const top = (h + min / 60) * HOUR_H;
                     const height = Math.max((eh - h + (emin - min) / 60) * HOUR_H, 20);
                     return (

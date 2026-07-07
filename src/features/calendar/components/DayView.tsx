@@ -75,8 +75,8 @@ export default function DayView({
               />
             ))}
             {dayEvents.map(ev => {
-              const [h, min] = ev.startTime!.split(":").map(Number) as [number,number];
-              const [eh, emin] = ev.endTime ? ev.endTime.split(":").map(Number) as [number,number] : [h + 1, min];
+              const [h, min] = ev.startTime!.split(":").map(Number) as [number, number];
+              const [eh, emin] = ev.endTime ? (ev.endTime.split(":").map(Number) as [number, number]) : [h + 1, min];
               const top = (h + min / 60) * HOUR_H;
               const height = Math.max((eh - h + (emin - min) / 60) * HOUR_H, 24);
               return (

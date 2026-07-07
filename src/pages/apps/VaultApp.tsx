@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Eye, EyeOff, KeyRound, Loader2, Lock, Pencil, Plus, RefreshCw, Save, Trash2, Upload, X } from "lucide-react";
 import { useState } from "react";
 import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
@@ -32,8 +32,8 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
       setEditing(false);
       setValue("");
       onSaved();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -49,8 +49,8 @@ function KeyRow({ category, keyName, onDeleted, onSaved }: { category: string; k
       await vaultRPCClient.deleteItems({ updates: [{ category, key: keyName }] });
       toastManager.success(`"${keyName}" deleted`, { duration: 3000 });
       onDeleted();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
       setDeleting(false);
       setConfirmDelete(false);
     }
@@ -176,8 +176,8 @@ function AddKeyForm({ category, onAdded }: { category: string; onAdded: () => vo
       setValue("");
       setOpen(false);
       onAdded();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setSaving(false);
     }
@@ -288,8 +288,8 @@ function BulkImportModal({
       toastManager.success(`Imported ${preview.length} key${preview.length !== 1 ? "s" : ""} into "${categoryLabel}"`, { duration: 4000 });
       onImported();
       onClose();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setImporting(false);
     }
@@ -433,7 +433,6 @@ export default function VaultApp() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const entries = vault.data ?? {};
-  const locked = false;
 
   const displayedCategories = activeCategory ? CATEGORIES.filter(c => c.id === activeCategory) : CATEGORIES;
 
@@ -486,23 +485,6 @@ export default function VaultApp() {
           <LoadingState message="Loading vault…" className="py-16" />
         ) : vault.error ? (
           <ErrorState title="Failed to load vault" error={vault.error} onRetry={() => void vault.mutate()} variant="page" />
-        ) : locked ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg">
-              <Lock className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-primary mb-1">Vault is locked</h2>
-              <p className="text-sm text-muted max-w-xs">Unlock the vault via the agent CLI to manage credentials.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => vault.mutate()}
-              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors cursor-pointer focus-ring"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Check again
-            </button>
-          </div>
         ) : (
           <div className="max-w-2xl mx-auto py-6 px-4 sm:px-6 space-y-6">
             {/* Search */}

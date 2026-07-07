@@ -60,8 +60,8 @@ export default function EventModal({ event, defaultDate, defaultHour, onClose, o
       ...(!allDay && endTime && { endTime }),
       allDay,
       type,
-      ...(type === "agent" && agentType !== undefined && { agentType }),
-      ...(type === "workflow" && workflowKey !== undefined && { workflowKey }),
+      ...(type === "agent" && { agentType }),
+      ...(type === "workflow" && { workflowKey }),
       color,
     });
   };

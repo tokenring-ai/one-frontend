@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -174,7 +174,7 @@ export default function CalendarApp() {
           void navigate(`/agent/${id}`);
         }
       } catch (error) {
-        toastManager.error(errorAsString(error));
+        toastManager.error(formatError(error));
       } finally {
         setRunning(false);
       }

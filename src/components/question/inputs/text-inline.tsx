@@ -21,7 +21,7 @@ export default function TextInlineQuestion({
   onClose,
   autoFocus = true,
 }: TextInlineProps) {
-  const [value, setValue] = useState(defaultValue ?? "");
+  const [value, setValue] = useState(defaultValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 

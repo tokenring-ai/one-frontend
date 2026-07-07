@@ -101,7 +101,7 @@ function ErrorDetails({ error, errorInfo }: { error?: Error | undefined; errorIn
       await navigator.clipboard.writeText(errorText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to copy error details:", err);
     }
   };

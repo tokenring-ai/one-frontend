@@ -1,15 +1,15 @@
 import { BaseAttachmentSchema, type InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { AnimatePresence, motion } from "framer-motion";
 import { File, FileCode, FileText, FolderOpen, History, Image, Paperclip, Send, Square, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
 import { agentRPCClient } from "../../rpc.ts";
 import HookSelector from "../HookSelector.tsx";
-import { toastManager } from "../ui/toast.tsx";
 import ModelSelector from "../ModelSelector.tsx";
 import SubAgentSelector from "../SubAgentSelector.tsx";
 import ToolSelector from "../ToolSelector.tsx";
+import { toastManager } from "../ui/toast.tsx";
 
 interface FileAttachment {
   id: string;
@@ -157,7 +157,7 @@ export default function ChatFooter({
       e.stopPropagation();
       setIsDragOver(false);
 
-      const files = Array.from(e.dataTransfer.files || []);
+      const files = Array.from(e.dataTransfer.files);
       if (files.length === 0) return;
 
       setIsProcessingFiles(true);
@@ -175,7 +175,7 @@ export default function ChatFooter({
             const attachment = await readFileAsAttachment(file);
             newAttachments.push(attachment);
           } catch (error: unknown) {
-            toastManager.error(`Failed to read "${file.name}": ${errorAsString(error)}`, { duration: 5000 });
+            toastManager.error(`Failed to read "${file.name}": ${formatError(error)}`, { duration: 5000 });
           }
         }
 
@@ -211,7 +211,7 @@ export default function ChatFooter({
             const attachment = await readFileAsAttachment(file);
             newAttachments.push(attachment);
           } catch (error: unknown) {
-            toastManager.error(`Failed to read "${file.name}": ${errorAsString(error)}`, { duration: 5000 });
+            toastManager.error(`Failed to read "${file.name}": ${formatError(error)}`, { duration: 5000 });
           }
         }
 
@@ -578,7 +578,7 @@ export default function ChatFooter({
           </div>
 
           <AnimatePresence>
-            {showHistory && commandHistory && commandHistory.length > 0 && (
+            {showHistory && commandHistory.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}

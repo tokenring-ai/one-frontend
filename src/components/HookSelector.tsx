@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Check, Search, X, XCircle, Zap } from "lucide-react";
 import type React from "react";
 import { useCallback, useMemo, useState } from "react";
@@ -23,7 +23,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
 
   const hooks = availableHooks.data?.hooks;
   const hookCount = Object.keys(hooks ?? {}).length;
-  const enabledCount = enabledHooksData?.hooks?.length ?? 0;
+  const enabledCount = enabledHooksData?.hooks.length ?? 0;
   const allEnabled = hookCount > 0 && enabledCount === hookCount;
 
   const handleToggleHook = useCallback(
@@ -37,7 +37,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
         }
         void enabledHooks.mutate();
       } catch (error: unknown) {
-        toastManager.error(errorAsString(error), { duration: 5000 });
+        toastManager.error(formatError(error), { duration: 5000 });
       }
     },
     [agentId, enabledHooks, enabledSet],
@@ -90,7 +90,7 @@ export default function HookSelector({ agentId, triggerVariant = "default" }: Ho
       }
       void enabledHooks.mutate();
     } catch (error: unknown) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     }
   }, [agentId, allEnabled, enabledHooks, hooks]);
 

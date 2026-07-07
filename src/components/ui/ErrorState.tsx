@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { AlertCircle } from "lucide-react";
 import { cn } from "../../lib/utils.ts";
 
@@ -12,7 +12,7 @@ interface ErrorStateProps {
 }
 
 export default function ErrorState({ title = "Something went wrong", error, onRetry, retryLabel = "Retry", variant = "inline", className }: ErrorStateProps) {
-  const message = errorAsString(error);
+  const message = formatError(error);
 
   if (variant === "page") {
     return (

@@ -1,5 +1,5 @@
 import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -85,7 +85,7 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
       }
     } catch (error) {
       setInput(message);
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
       setSubmitFeedback({ message: "Failed to send", type: "error" });
       setTimeout(() => setSubmitFeedback(null), 2000);
     }

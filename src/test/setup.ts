@@ -1,3 +1,5 @@
+// eslint-disable @typescript-eslint/no-unnecessary-condition -- this is a test file
+
 import "@testing-library/jest-dom/vitest";
 
 if (typeof window !== "undefined" && !window.matchMedia) {
@@ -30,6 +32,7 @@ if (typeof Element !== "undefined") {
   if (!Element.prototype.setPointerCapture) {
     Element.prototype.setPointerCapture = () => {};
   }
+
   if (!Element.prototype.releasePointerCapture) {
     Element.prototype.releasePointerCapture = () => {};
   }

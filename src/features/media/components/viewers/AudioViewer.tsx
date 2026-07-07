@@ -1,5 +1,5 @@
 import type { AudioIndexEntry } from "@tokenring-ai/media-library/rpc/schema";
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2, Music, Pause, Play, Sparkles, Type, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toastManager } from "../../../../components/ui/toast.tsx";
@@ -42,8 +42,8 @@ export default function AudioViewer({
       } else {
         toastManager.error("Agent not found", { duration: 4000 });
       }
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setTranscribing(false);
     }

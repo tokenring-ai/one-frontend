@@ -3,16 +3,17 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toastManager } from "../../../components/ui/toast.tsx";
 import { agentRPCClient, filesystemRPCClient, useAgentTypes } from "../../../rpc.ts";
-import type { StockHistoricalRow, StockQuote } from "../types.ts";
+import type { StockHistoricalRow, StockPriceTicksRow, StockQuote } from "../types.ts";
 
 interface AskAIModalProps {
   symbol: string;
-  quoteData: StockQuote | null;
-  historyRows: StockHistoricalRow[];
+  quoteData: StockQuote | undefined;
+  historyRows?: StockHistoricalRow[] | undefined;
+  intradayRows?: StockPriceTicksRow[] | undefined;
   onClose: () => void;
 }
 
-export default function AskAIModal({ symbol, quoteData, historyRows, onClose }: AskAIModalProps) {
+export default function AskAIModal({ symbol, quoteData, historyRows, intradayRows, onClose }: AskAIModalProps) {
   const navigate = useNavigate();
   const agentTypes = useAgentTypes();
   const [selectedType, setSelectedType] = useState("");
@@ -32,7 +33,8 @@ export default function AskAIModal({ symbol, quoteData, historyRows, onClose }: 
         symbol,
         question,
         quote: quoteData,
-        recentHistory: historyRows.slice(-20),
+        recentHistory: historyRows?.slice(-20),
+        recentTicks: intradayRows?.slice(-20),
         fetchedAt: new Date().toISOString(),
       };
       const contextPath = `/tmp/tokenring-stock-${symbol}-${Date.now()}.json`;
@@ -43,12 +45,12 @@ export default function AskAIModal({ symbol, quoteData, historyRows, onClose }: 
 
       onClose();
       void navigate(`/agent/${agentId}`);
-    } catch (err: unknown) {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to launch agent";
       toastManager.error(errorMessage, { duration: 5000 });
       setLaunching(false);
     }
-  }, [effectiveType, symbol, question, quoteData, historyRows, navigate, onClose]);
+  }, [effectiveType, symbol, question, quoteData, historyRows, intradayRows, navigate, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">

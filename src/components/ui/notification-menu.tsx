@@ -135,9 +135,7 @@ export default function NotificationMenu() {
                       transition={{ duration: 0.2 }}
                     >
                       <div className="flex items-start gap-2">
-                        <span className={cn("text-sm font-bold mt-0.5", toastColors[notification.type || "info"])}>
-                          {toastIcons[notification.type || "info"]}
-                        </span>
+                        <span className={cn("text-sm font-bold mt-0.5", toastColors[notification.type])}>{toastIcons[notification.type]}</span>
                         <div className="flex-1 min-w-0">
                           {notification.title && <h4 className="text-sm font-medium text-primary mb-1">{notification.title}</h4>}
                           <p className="text-sm text-muted wrap-break-word">{notification.message}</p>

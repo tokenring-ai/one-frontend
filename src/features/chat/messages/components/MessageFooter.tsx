@@ -15,6 +15,7 @@ export default function MessageFooter({ msg, onDownload }: { msg: ChatMessage; o
 
   const handleCopy = async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be undefined, TS is wrong
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(copyText!);
       } else {
@@ -29,7 +30,7 @@ export default function MessageFooter({ msg, onDownload }: { msg: ChatMessage; o
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to copy:", err);
     }
   };

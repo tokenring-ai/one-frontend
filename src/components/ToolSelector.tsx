@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import {
   Bot,
   Bug,
@@ -27,8 +27,8 @@ import {
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { chatRPCClient, useAvailableTools, useEnabledTools } from "../rpc.ts";
-import { toastManager } from "./ui/toast.tsx";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
+import { toastManager } from "./ui/toast.tsx";
 
 interface ToolSelectorProps {
   agentId: string;
@@ -122,7 +122,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
   const handleToggleTool = useCallback(
     async (toolName: string) => {
       try {
-        const isEnabled = enabledToolsData?.tools?.includes(toolName);
+        const isEnabled = enabledToolsData?.tools.includes(toolName);
         if (isEnabled) {
           await chatRPCClient.disableTools({ agentId, tools: [toolName] });
         } else {
@@ -130,7 +130,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
         }
         void enabledTools.mutate();
       } catch (error: unknown) {
-        toastManager.error(errorAsString(error), { duration: 5000 });
+        toastManager.error(formatError(error), { duration: 5000 });
       }
     },
     [agentId, enabledTools, enabledToolsData?.tools],
@@ -151,7 +151,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
         }
         void enabledTools.mutate();
       } catch (error: unknown) {
-        toastManager.error(errorAsString(error), { duration: 5000 });
+        toastManager.error(formatError(error), { duration: 5000 });
       }
     },
     [agentId, enabledTools, enabledToolsData?.tools],
@@ -176,7 +176,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
     }
 
     return { grouped, categories };
-  }, [filteredTools, tools]);
+  }, [filteredTools]);
 
   // Auto-expand categories that contain search results
   useEffect(() => {
@@ -189,7 +189,7 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
 
   useEffect(() => {
     const categoriesWithEnabledTools = new Set<string>();
-    enabledToolsData?.tools?.forEach(tool => {
+    enabledToolsData?.tools.forEach(tool => {
       const [, toolName] = tool.match(/^(.*)\//) ?? [];
       if (toolName) {
         categoriesWithEnabledTools.add(toolName);
@@ -208,12 +208,12 @@ export default function ToolSelector({ agentId, triggerVariant = "default" }: To
               ? "flex items-center justify-center p-1.5 rounded hover:bg-hover transition-colors cursor-pointer group focus-ring text-muted hover:text-primary"
               : "hidden md:flex items-center gap-2 px-2 py-1 rounded hover:bg-hover transition-colors cursor-pointer group focus-ring"
           }
-          aria-label={`Select tools. ${enabledToolsData?.tools?.length ?? 0} enabled`}
-          title={`${enabledToolsData?.tools?.length ?? 0} tools enabled`}
+          aria-label={`Select tools. ${enabledToolsData?.tools.length ?? 0} enabled`}
+          title={`${enabledToolsData?.tools.length ?? 0} tools enabled`}
         >
           <Layers className={isIconTrigger ? "w-5 h-5" : "w-3.5 h-3.5 text-muted group-hover:text-primary"} />
           {!isIconTrigger && (
-            <span className="text-xs font-mono text-muted group-hover:text-primary truncate max-w-48">{enabledToolsData?.tools?.length ?? 0} enabled</span>
+            <span className="text-xs font-mono text-muted group-hover:text-primary truncate max-w-48">{enabledToolsData?.tools.length ?? 0} enabled</span>
           )}
         </button>
       </DropdownMenuTrigger>

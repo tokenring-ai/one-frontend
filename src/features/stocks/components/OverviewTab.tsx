@@ -6,7 +6,7 @@ import RangeBar from "./RangeBar.tsx";
 import StatCard from "./StatCard.tsx";
 
 interface OverviewTabProps {
-  quote: StockQuote | null;
+  quote: StockQuote | undefined;
   history: StockHistoricalRow[] | undefined;
 }
 

@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { useCallback, useRef, useState } from "react";
 import { toastManager } from "../../../components/ui/toast.tsx";
 import { agentRPCClient } from "../../../rpc.ts";
@@ -52,7 +52,7 @@ Respond with ONLY the rewritten text. No explanation, no preamble, no code fence
           }
         }
       } catch (e: unknown) {
-        if (!ac.signal.aborted) toastManager.error(errorAsString(e), { duration: 4000 });
+        if (!ac.signal.aborted) toastManager.error(formatError(e), { duration: 4000 });
       } finally {
         if (!ac.signal.aborted) setLoading(false);
       }

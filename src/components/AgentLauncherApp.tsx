@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2 } from "lucide-react";
 import type React from "react";
 import { useMemo, useState } from "react";
@@ -49,7 +49,7 @@ export default function AgentLauncherApp({
       await agents.mutate();
       void navigate(`/agent/${id}`);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setCreating(false);
     }

@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { Cpu, Loader2, Pause, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ export default function AgentsApp() {
       await agents.mutate();
       void navigate(`/agent/${id}`);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setCreatingAgentType(null);
     }
@@ -39,7 +39,7 @@ export default function AgentsApp() {
       await agents.mutate();
       void navigate(`/agent/${id}`);
     } catch (error) {
-      toastManager.error(errorAsString(error), { duration: 5000 });
+      toastManager.error(formatError(error), { duration: 5000 });
     } finally {
       setSpawningWorkflow(null);
     }

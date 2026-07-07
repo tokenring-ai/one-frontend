@@ -1,6 +1,6 @@
 import { Moon, Settings, Sun } from "lucide-react";
-import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { useSidebar } from "../../components/SidebarContext.tsx";
+import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { useTheme } from "../../hooks/useTheme.ts";
 
 export default function SettingsApp() {

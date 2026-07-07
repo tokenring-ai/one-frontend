@@ -15,7 +15,7 @@ interface FormInlineProps {
 }
 
 export default function FormInlineQuestion({ agentId, question, requestId, interactionId, onClose, autoFocus = true }: FormInlineProps) {
-  const [values, setValues] = useState<Record<string, any>>({});
+  const [values, setValues] = useState<Record<string, unknown>>({});
   const [currentSection, setCurrentSection] = useState(0);
   const [currentField, setCurrentField] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +42,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
     }
   }, [currentEntry]);
 
-  const handleFieldSubmit = async (value: any) => {
+  const handleFieldSubmit = async (value: unknown) => {
     if (!section || !currentEntry) return;
     const [fieldKey, field] = currentEntry;
     // Validate required fields
@@ -60,9 +60,9 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
 
     if (isLastField && isLastSection) {
       // Build final result
-      const result: Record<string, Record<string, any>> = {};
+      const result: Record<string, Record<string, unknown>> = {};
       for (const sec of question.sections) {
-        const secResult: Record<string, any> = {};
+        const secResult: Record<string, unknown> = {};
         for (const key of Object.keys(sec.fields)) {
           secResult[key] = values[`${sec.name}.${key}`];
         }
@@ -185,8 +185,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
                 agentId={agentId}
                 requestId={requestId}
                 onSubmitValue={handleFieldSubmit}
-                onClose={() => {
-                }}
+                onClose={() => {}}
                 autoFocus={autoFocus}
               />
             </div>
@@ -203,8 +202,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
                 agentId={agentId}
                 requestId={requestId}
                 onSubmitValue={handleFieldSubmit}
-                onClose={() => {
-                }}
+                onClose={() => {}}
                 autoFocus={autoFocus}
               />
             </div>
@@ -221,7 +219,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
             disabled={isSubmitting}
             className="flex items-center gap-1.5 p-1.5 rounded-md text-xs text-muted hover:text-primary transition-colors disabled:opacity-50 focus-ring"
           >
-            <X className="w-3.5 h-3.5"/>
+            <X className="w-3.5 h-3.5" />
             Cancel
           </button>
           {canGoPrevious && (
@@ -231,7 +229,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
               disabled={isSubmitting}
               className="flex items-center gap-1.5 text-xs text-primary hover:text-accent transition-colors disabled:opacity-50 bg-tertiary px-3 py-1.5 rounded-md focus-ring"
             >
-              <ChevronLeft className="w-3.5 h-3.5"/>
+              <ChevronLeft className="w-3.5 h-3.5" />
               Previous
             </button>
           )}
@@ -241,20 +239,20 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
             type="button"
             onClick={e => {
               const input = e.currentTarget.parentElement?.parentElement?.querySelector("input") as HTMLInputElement;
-              if (input?.value) void handleFieldSubmit(input.value);
+              if (input.value) void handleFieldSubmit(input.value);
             }}
             disabled={isSubmitting}
             className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
           >
             {isSubmitting ? (
               <>
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 <span>{isLastField && isLastSection ? "Submitting..." : "Processing..."}</span>
               </>
             ) : (
               <>
                 {isLastField && isLastSection ? "Submit" : "Next"}
-                <ChevronRight className="w-3.5 h-3.5"/>
+                <ChevronRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>

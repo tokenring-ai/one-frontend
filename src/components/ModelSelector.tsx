@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Bot, Check, Cloud, Code, Cpu, Database, GitFork, Search, Sparkles, Zap } from "lucide-react";
 import type React from "react";
@@ -68,7 +68,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
         setIsOpen(false);
         toastManager.success(`Model changed to ${modelId.split("/").pop()}`, { duration: 3000 });
       } catch (error) {
-        toastManager.error(errorAsString(error), { duration: 5000 });
+        toastManager.error(formatError(error), { duration: 5000 });
         setIsSelecting(false);
         setSelectingModelId(null);
       }
@@ -87,7 +87,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
           modelId,
           provider,
           modelName: modelId.split("/").pop() || modelId,
-          available: modelInfo.available ?? true,
+          available: modelInfo.available,
         }))
         .sort((a, b) => a.modelName.localeCompare(b.modelName)),
     );
@@ -125,7 +125,7 @@ export default function ModelSelector({ agentId, triggerVariant = "default" }: M
   // Auto-expand provider with currently selected model
   useEffect(() => {
     if (currentModelData?.model) {
-      const provider = allModels.find(m => m.modelId === currentModelData?.model)?.provider;
+      const provider = allModels.find(m => m.modelId === currentModelData.model)?.provider;
       if (provider) {
         setExpandedProviders(new Set([provider]));
       }

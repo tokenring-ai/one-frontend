@@ -52,7 +52,7 @@ export default function HistoryTab({ symbol }: HistoryTabProps) {
         <div className="flex justify-center py-8">
           <Loader2 className="w-5 h-5 animate-spin text-muted" />
         </div>
-      ) : !history.data?.rows?.length ? (
+      ) : !history.data?.rows.length ? (
         <div className="py-8 text-center text-muted text-sm">No history data</div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-primary">

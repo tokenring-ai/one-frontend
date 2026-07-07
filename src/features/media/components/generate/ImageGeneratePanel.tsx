@@ -1,4 +1,4 @@
-import errorAsString from "@tokenring-ai/utility/error/errorAsString";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import { WandSparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toastManager } from "../../../../components/ui/toast.tsx";
@@ -50,8 +50,8 @@ export default function ImageGeneratePanel({ agentId, onGenerated }: { agentId: 
       toastManager.success("Image generated!", { duration: 3000 });
       setPrompt("");
       onGenerated();
-    } catch (err: unknown) {
-      toastManager.error(errorAsString(err), { duration: 5000 });
+    } catch (err) {
+      toastManager.error(formatError(err), { duration: 5000 });
     } finally {
       setGenerating(false);
     }

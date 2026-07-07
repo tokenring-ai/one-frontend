@@ -158,7 +158,7 @@ export default function FormInlineQuestion({ agentId, question, requestId, inter
               ref={inputRef}
               id={`form-field-${fieldKey}`}
               type={field.masked ? "password" : "text"}
-              defaultValue={currentFieldValue || field.defaultValue}
+              defaultValue={typeof currentFieldValue === "string" ? currentFieldValue : field.defaultValue}
               onKeyDown={e => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();

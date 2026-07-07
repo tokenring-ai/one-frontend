@@ -29,10 +29,11 @@ export default function RightPanel({
         return <VideoViewer video={selected} onWorkOnVideo={onWorkOnSelection} onClose={onClearSelection} />;
       case "audio":
         return <AudioViewer audio={selected} agentId={agentId} onWorkOnAudio={onWorkOnSelection} onClose={onClearSelection} />;
-      default:
+      default: {
         const exhaustive: any = selected satisfies never;
         console.error(`Unhandled media kind: ${exhaustive}`);
         return null;
+      }
     }
   }
 
@@ -43,9 +44,10 @@ export default function RightPanel({
       return <VideoGeneratePanel agentId={agentId} onGenerated={onGenerated} />;
     case "audio":
       return <SpeechGeneratePanel agentId={agentId} onGenerated={onGenerated} />;
-    default:
+    default: {
       const exhaustive: any = kind satisfies never;
       console.error(`Unhandled media kind: ${exhaustive}`);
       return null;
+    }
   }
 }

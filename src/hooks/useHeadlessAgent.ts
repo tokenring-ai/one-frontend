@@ -36,7 +36,7 @@ export function useHeadlessAgent(options: UseHeadlessAgentOptions): UseHeadlessA
   useEffect(() => {
     const { appName, preferredTypes, resolvePreferred, noTypesMessage = "No agent types available", onNoTypes, onError, headless = true } = optionsRef.current;
 
-    let abortController = new AbortController();
+    const abortController = new AbortController();
     void (async () => {
       try {
         const types = await agentRPCClient.getAgentTypes({});

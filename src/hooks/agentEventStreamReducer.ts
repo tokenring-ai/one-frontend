@@ -48,10 +48,6 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
     return { ...prev, agentNotFound: true };
   }
 
-  if (chunk.status !== "success") {
-    return prev;
-  }
-
   const currentMessages = [...prev.messages];
   let currentAgentStatus = prev.agentStatus;
   let currentExecutionState = prev.currentExecutionState;

@@ -153,9 +153,10 @@ export function useAvailableSubAgents(agentId: string) {
         return { agents: result.agents };
       case "agentNotFound":
         throw new Error(`Agent not found: ${agentId}`);
-      default:
+      default: {
         const exhaustive: any = result satisfies never;
         throw new Error(`Unexpected result status: ${exhaustive.status}`);
+      }
     }
   });
 }

@@ -28,6 +28,15 @@ export default function WorkflowsApp() {
 
   const runningAgents = useMemo(() => (agents.data ?? []).filter(a => !a.idle && workflowAgentTypes.has(a.agentType)), [agents.data, workflowAgentTypes]);
 
+  const groupedWorkflows = useMemo(() => {
+    const groups: Record<string, NonNullable<typeof workflows.data>> = {};
+    for (const workflow of workflows.data ?? []) {
+      const category = workflow.category || "User-Created Workflows";
+      (groups[category] ??= []).push(workflow);
+    }
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [workflows.data]);
+
   return (
     <div className="w-full h-full flex flex-col bg-primary">
       <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-6">
@@ -65,14 +74,14 @@ export default function WorkflowsApp() {
           )}
 
           {/* Available workflows */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <span className="text-2xs font-bold text-cyan-600 dark:text-cyan-500/90 uppercase tracking-widest px-1 block">Available Workflows</span>
 
             {workflows.isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 text-muted animate-spin" />
               </div>
-            ) : (workflows.data?.length ?? 0) === 0 ? (
+            ) : groupedWorkflows.length === 0 ? (
               <div className="px-4 py-8 text-center border border-dashed border-primary rounded-lg bg-secondary/30">
                 <GitBranch className="w-8 h-8 text-muted mx-auto mb-3 opacity-50" />
                 <p className="text-sm font-medium text-primary mb-1">No workflows available</p>
@@ -81,41 +90,44 @@ export default function WorkflowsApp() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {workflows.data!.map(workflow => (
-                  <div
-                    key={workflow.name}
-                    className="flex flex-col gap-3 bg-secondary border border-primary px-4 py-4 rounded-xl hover:border-cyan-500/40 hover:shadow-card transition-all shadow-sm"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-linear-to-br from-cyan-500 to-teal-600 flex items-center justify-center shrink-0 shadow-sm">
-                        <GitBranch className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-primary truncate">{workflow.displayName}</div>
-                        {workflow.description && <div className="text-2xs text-muted mt-1 line-clamp-2 leading-relaxed">{workflow.description}</div>}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => spawnWorkflow(workflow.name)}
-                      disabled={spawning === workflow.name}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring shadow-sm w-full"
-                      aria-label={`Launch workflow: ${workflow.displayName}`}
-                    >
-                      {spawning === workflow.name ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Launching...
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="w-3.5 h-3.5 rotate-180 fill-current" /> Launch
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
+              groupedWorkflows.map(([category, items]) => (
+                <div key={category} className="space-y-1">
+                  <h3 className="text-2xs font-semibold text-muted uppercase tracking-wider px-1">{category}</h3>
+                  <ul className="flex flex-col border border-primary rounded-xl overflow-hidden bg-secondary divide-y divide-primary shadow-sm">
+                    {items.map(workflow => (
+                      <li key={workflow.name}>
+                        <button
+                          type="button"
+                          onClick={() => spawnWorkflow(workflow.name)}
+                          disabled={spawning === workflow.name}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+                          aria-label={`Launch workflow: ${workflow.displayName}`}
+                        >
+                          <div className="shrink-0 text-cyan-500">
+                            {spawning === workflow.name ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Pause className="w-3.5 h-3.5 rotate-180 fill-current" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm font-medium text-primary truncate">{workflow.displayName}</span>
+                              <span className="shrink-0 text-2xs font-mono text-muted bg-primary/50 border border-primary px-1.5 py-0.5 rounded">
+                                {workflow.agentType}
+                              </span>
+                            </div>
+                            {workflow.description && <div className="text-2xs text-muted line-clamp-1 mt-0.5">{workflow.description}</div>}
+                          </div>
+                          <span className="shrink-0 text-2xs font-medium text-cyan-600 dark:text-cyan-400">
+                            {spawning === workflow.name ? "Launching…" : "Launch"}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
             )}
           </div>
         </div>

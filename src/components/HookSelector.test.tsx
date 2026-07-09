@@ -164,7 +164,7 @@ describe("HookSelector", () => {
     expect(firstHook).toBeTruthy();
     expect(secondHook).toBeTruthy();
 
-    firstHook!.focus();
+    (firstHook as HTMLElement).focus();
     await act(async () => {
       fireEvent.keyDown(firstHook!, { key: "ArrowDown", code: "ArrowDown" });
     });
@@ -195,7 +195,7 @@ describe("HookSelector", () => {
 
     const hookItem = screen.getByText("File Hooks").closest('[role="option"]');
     expect(hookItem).toBeTruthy();
-    hookItem!.focus();
+    (hookItem as HTMLElement).focus();
 
     await act(async () => {
       fireEvent.keyDown(hookItem!, { key: "Enter", code: "Enter" });

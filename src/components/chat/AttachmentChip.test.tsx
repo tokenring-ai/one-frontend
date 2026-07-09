@@ -15,12 +15,10 @@ vi.mock("../ui/toast.tsx", () => ({
 }));
 
 const textAttachment: BaseAttachment = {
-  type: "attachment",
   name: "notes.txt",
   encoding: "base64",
   mimeType: "text/plain",
   body: btoa("hello world"),
-  timestamp: Date.now(),
 };
 
 describe("AttachmentChip", () => {

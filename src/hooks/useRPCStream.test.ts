@@ -51,7 +51,7 @@ describe("useRPCStream", () => {
       useRPCStream({
         key: "sum",
         subscribe: signal => createGenerator([1, 2, 3], signal),
-        reduce: (prev, chunk) => (prev ?? 0) + chunk,
+        reduce: (prev, chunk) => (prev ?? 0) + (chunk ?? 0),
       }),
     );
 
@@ -96,7 +96,7 @@ describe("useRPCStream", () => {
       useRPCStream({
         key: "stop",
         subscribe,
-        shouldStop: chunk => chunk.stop,
+        shouldStop: chunk => chunk?.stop ?? false,
       }),
     );
 
@@ -203,7 +203,7 @@ describe("useRPCStream", () => {
           key: streamKey,
           initialData: () => ({ value: 0 }),
           subscribe: signal => createGenerator([{ value: streamKey === "a" ? 1 : 2 }], signal),
-          reduce: (_prev, chunk) => chunk,
+          reduce: (_prev, chunk) => chunk ?? { value: 0 },
         }),
       { initialProps: { streamKey: "a" } },
     );

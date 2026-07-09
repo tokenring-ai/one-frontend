@@ -6,7 +6,7 @@ describe("reduceAgentEventStreamChunk", () => {
   it("marks agentNotFound without clearing prior messages", () => {
     const prev = {
       ...createInitialAgentEventStreamState(),
-      messages: [{ type: "output.info", message: "hello", timestamp: 1 }],
+      messages: [{ type: "output.info" as const, message: "hello", timestamp: 1 }],
       position: 3,
     };
 

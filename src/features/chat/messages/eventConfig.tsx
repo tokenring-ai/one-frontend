@@ -1,4 +1,4 @@
-import { Activity, Bot, CircleSlash, FileCode, Info, Zap } from "lucide-react";
+import { Activity, Bot, CircleSlash, Info, Zap } from "lucide-react";
 import type React from "react";
 import type { ChatMessage } from "../../../types/agent-events.ts";
 
@@ -35,10 +35,6 @@ export const events: Record<ChatMessage["type"], EventConfig> = {
   "output.error": {
     style: "text-error",
     icon: <Info className="w-[1em] text-error/70" />,
-  },
-  "output.artifact": {
-    style: "text-accent",
-    icon: <FileCode className="w-[1em] text-muted" />,
   },
   "output.chat": {
     style: "text-primary",

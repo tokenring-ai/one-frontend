@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ChatFooter from "./ChatFooter.tsx";
 
 const { warningMock, errorMock } = vi.hoisted(() => ({
@@ -46,6 +46,47 @@ function renderChatFooter(overrides: Partial<Parameters<typeof ChatFooter>[0]> =
   };
 
   return render(<ChatFooter {...props} />);
+}
+
+type MediaRecorderHandler = (() => void) | null;
+
+class MockMediaRecorder {
+  static isTypeSupported = vi.fn(() => true);
+
+  state: "inactive" | "recording" = "inactive";
+  mimeType: string;
+  ondataavailable: ((event: { data: Blob }) => void) | null = null;
+  onerror: MediaRecorderHandler = null;
+  onstop: MediaRecorderHandler = null;
+  start = vi.fn((_timeslice?: number) => {
+    this.state = "recording";
+  });
+  stop = vi.fn(() => {
+    this.state = "inactive";
+    this.ondataavailable?.({ data: new Blob([new Uint8Array([1, 2, 3, 4])], { type: this.mimeType }) });
+    this.onstop?.();
+  });
+
+  constructor(_stream: MediaStream, options?: { mimeType?: string }) {
+    this.mimeType = options?.mimeType ?? "audio/webm";
+  }
+}
+
+function stubMediaDevices() {
+  const trackStop = vi.fn();
+  const stream = {
+    getTracks: () => [{ stop: trackStop }],
+  } as unknown as MediaStream;
+
+  const getUserMedia = vi.fn().mockResolvedValue(stream);
+  Object.defineProperty(navigator, "mediaDevices", {
+    configurable: true,
+    value: { getUserMedia },
+  });
+
+  vi.stubGlobal("MediaRecorder", MockMediaRecorder);
+
+  return { getUserMedia, trackStop, stream };
 }
 
 describe("ChatFooter file attachments", () => {
@@ -95,5 +136,106 @@ describe("ChatFooter file attachments", () => {
     });
 
     vi.unstubAllGlobals();
+  });
+});
+
+describe("ChatFooter audio recording", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("starts recording when the mic button is clicked", async () => {
+    const { getUserMedia } = stubMediaDevices();
+    const user = userEvent.setup();
+    renderChatFooter();
+
+    await user.click(screen.getByRole("button", { name: "Record audio" }));
+
+    await waitFor(() => {
+      expect(getUserMedia).toHaveBeenCalledWith({ audio: true });
+      expect(screen.getByRole("status", { name: "Recording in progress" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Stop recording" })).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
+  it("attaches recorded audio after stop", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    stubMediaDevices();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderChatFooter();
+
+    await user.click(screen.getByRole("button", { name: "Record audio" }));
+    await waitFor(() => {
+      expect(screen.getByRole("status", { name: "Recording in progress" })).toBeInTheDocument();
+    });
+
+    // Advance past the minimum recording duration so the clip is kept
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    await user.click(screen.getByRole("button", { name: "Stop recording and attach" }));
+
+    await act(async () => {
+      // Flush async finalizeRecording (arrayBuffer + FileReader)
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Record audio" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByText(/recording-/)).toBeInTheDocument();
+      expect(screen.getByText(/1 file/)).toBeInTheDocument();
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("discards recording when cancelled", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    stubMediaDevices();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderChatFooter();
+
+    await user.click(screen.getByRole("button", { name: "Record audio" }));
+    await waitFor(() => {
+      expect(screen.getByRole("status", { name: "Recording in progress" })).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    await user.click(screen.getByRole("button", { name: "Cancel recording" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Record audio" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.queryByText(/recording-/)).not.toBeInTheDocument();
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("shows an error when microphone permission is denied", async () => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockRejectedValue(new Error("NotAllowedError: Permission denied")),
+      },
+    });
+    vi.stubGlobal("MediaRecorder", MockMediaRecorder);
+
+    const user = userEvent.setup();
+    renderChatFooter();
+
+    await user.click(screen.getByRole("button", { name: "Record audio" }));
+
+    await waitFor(() => {
+      expect(errorMock).toHaveBeenCalledWith("Microphone permission denied. Allow microphone access to record audio.", { duration: 5000 });
+    });
   });
 });

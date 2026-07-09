@@ -1,11 +1,10 @@
 import { motion, type Variants } from "framer-motion";
-import { Check, Code, FileJson, FileText, Image as ImageIcon, Info, Layout, Square } from "lucide-react";
+import { Check, Info, Square } from "lucide-react";
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import AttachmentChip from "../../../components/chat/AttachmentChip";
 import type { ChatMessage, InteractionResponseMessage, QuestionPromptMessage } from "../../../types/agent-events.ts";
-import ArtifactDisplay from "./components/ArtifactDisplay.tsx";
 import CodeBlock from "./components/CodeBlock.tsx";
 import InteractionResponseDisplay from "./components/InteractionResponseDisplay.tsx";
 import MessageDetails from "./components/MessageDetails.tsx";
@@ -30,14 +29,6 @@ const messageVariants = {
 
 export default function MessageComponent({ msg, question, response }: MessageComponentProps) {
   const messageIcon = useMemo(() => {
-    if (msg.type === "output.artifact") {
-      const mime = msg.mimeType;
-      if (mime === "text/x-diff") return <Code className="w-[1em] text-success" />;
-      if (mime === "text/markdown") return <FileText className="w-[1em] text-accent" />;
-      if (mime === "application/json") return <FileJson className="w-[1em] text-warning" />;
-      if (mime === "text/html") return <Layout className="w-[1em] text-warning" />;
-      if (mime.startsWith("image/")) return <ImageIcon className="w-[1em] text-accent" />;
-    }
     if (msg.type === "agent.response") {
       if (msg.status === "success") return <Check className="w-[1em] text-success" />;
       if (msg.status === "cancelled") return <Square className="w-[1em] text-warning" />;
@@ -88,8 +79,6 @@ export default function MessageComponent({ msg, question, response }: MessageCom
       <div className={`${messageStyle} w-full min-w-0`}>
         {msg.type === "toolCall" ? (
           <ToolCallDisplay msg={msg} />
-        ) : msg.type === "output.artifact" ? (
-          <ArtifactDisplay artifact={msg} />
         ) : isQuestionWithResponse ? (
           <QuestionWithResponseDisplay question={pairedQuestion!} {...(response !== undefined && { response })} />
         ) : msg.type === "input.interaction" ? (
@@ -133,21 +122,7 @@ export default function MessageComponent({ msg, question, response }: MessageCom
             )}
           </>
         ) : null}
-        <MessageFooter
-          msg={msg}
-          {...(msg.type === "output.artifact" && {
-            onDownload: () => {
-              const decodedBody = msg.encoding === "base64" ? Buffer.from(msg.body, "base64") : msg.body;
-              const blob = new Blob([decodedBody], { type: msg.mimeType });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = msg.name;
-              a.click();
-              URL.revokeObjectURL(url);
-            },
-          })}
-        />
+        <MessageFooter msg={msg} />
       </div>
     </motion.div>
   );

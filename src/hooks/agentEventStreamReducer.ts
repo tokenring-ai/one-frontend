@@ -95,7 +95,6 @@ export function reduceAgentEventStreamChunk(prev: AgentEventStreamState, chunk: 
       case "agent.created":
       case "agent.stopped":
       case "agent.response":
-      case "output.artifact":
       case "output.info":
       case "output.warning":
       case "output.error":

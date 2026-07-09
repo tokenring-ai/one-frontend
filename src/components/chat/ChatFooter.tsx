@@ -1,7 +1,7 @@
-import { BaseAttachmentSchema, type InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import { type InputAttachment, InputAttachmentSchema } from "@tokenring-ai/agent/AgentEvents";
 import formatError from "@tokenring-ai/utility/error/formatError";
 import { AnimatePresence, motion } from "framer-motion";
-import { File, FileCode, FileText, FolderOpen, History, Image, Paperclip, Send, Square, X } from "lucide-react";
+import { FileAudio, FileCode, File as FileIcon, FileText, FolderOpen, History, Image, Mic, Paperclip, Send, Square, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { agentRPCClient } from "../../rpc.ts";
@@ -37,19 +37,77 @@ interface ChatFooterProps {
 // Get file icon based on mime type
 function getFileIcon(mimeType: string) {
   if (mimeType.startsWith("image/")) return Image;
+  if (mimeType.startsWith("audio/")) return FileAudio;
   if (mimeType.startsWith("text/")) return FileText;
   if (mimeType.includes("json") || mimeType.includes("javascript") || mimeType.includes("typescript")) return FileCode;
-  return File;
+  return FileIcon;
 }
 
 // Maximum file size (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// Match CLI: discard accidental taps, hard-stop long recordings
+const MIN_RECORDING_MS = 150;
+const MAX_RECORDING_MS = 5 * 60 * 1000;
 
 // Format file size with appropriate units
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} bytes`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
+}
+
+function formatRecordingDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function pickRecorderMimeType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mpeg", "audio/wav"];
+  return candidates.find(type => MediaRecorder.isTypeSupported(type));
+}
+
+function extensionForMimeType(mimeType: string): string {
+  if (mimeType.includes("webm")) return "webm";
+  if (mimeType.includes("mpeg") || mimeType.includes("mp3")) return "mp3";
+  if (mimeType.includes("wav")) return "wav";
+  return "webm";
+}
+
+function normalizeAttachmentMimeType(mimeType: string): string {
+  // MediaRecorder may report codecs in the type string; schema only allows the base type.
+  if (mimeType.startsWith("audio/webm")) return "audio/webm";
+  if (mimeType.startsWith("audio/mpeg")) return "audio/mpeg";
+  if (mimeType.startsWith("audio/wav") || mimeType.startsWith("audio/wave") || mimeType.startsWith("audio/x-wav")) {
+    return "audio/wav";
+  }
+  return mimeType;
+}
+
+function recordingFileName(mimeType: string): string {
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
+  return `recording-${stamp}.${extensionForMimeType(mimeType)}`;
+}
+
+function createRecordingFile(bytes: Uint8Array, name: string, mimeType: string): File {
+  // Copy into a standalone ArrayBuffer so the view is a valid BlobPart under
+  // stricter lib types (Uint8Array may be backed by SharedArrayBuffer).
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const blobParts: BlobPart[] = [arrayBuffer];
+  try {
+    if (typeof File === "function") {
+      return new File(blobParts, name, { type: mimeType });
+    }
+  } catch {
+    // Some test environments expose a non-constructable File global.
+  }
+
+  return Object.assign(new Blob(blobParts, { type: mimeType }), {
+    name,
+    lastModified: Date.now(),
+  }) as File;
 }
 
 export default function ChatFooter({
@@ -71,12 +129,20 @@ export default function ChatFooter({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingStartedAtRef = useRef<number | null>(null);
+  const maxRecordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recordingCancelledRef = useRef(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(0);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
   const [historyBuffer, setHistoryBuffer] = useState("");
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDurationMs, setRecordingDurationMs] = useState(0);
   const isNavigatingHistoryRef = useRef(false);
 
   // Reset history navigation when user manually types
@@ -88,6 +154,51 @@ export default function ChatFooter({
     // Reset the ref after the effect runs
     isNavigatingHistoryRef.current = false;
   }, [historyIndex]);
+
+  const stopMediaTracks = useCallback(() => {
+    for (const track of mediaStreamRef.current?.getTracks() ?? []) {
+      track.stop();
+    }
+    mediaStreamRef.current = null;
+  }, []);
+
+  const clearMaxRecordingTimeout = useCallback(() => {
+    if (maxRecordingTimeoutRef.current !== null) {
+      clearTimeout(maxRecordingTimeoutRef.current);
+      maxRecordingTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Tick recording duration while active
+  useEffect(() => {
+    if (!isRecording) return;
+
+    const interval = setInterval(() => {
+      if (recordingStartedAtRef.current !== null) {
+        setRecordingDurationMs(Date.now() - recordingStartedAtRef.current);
+      }
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  // Cleanup MediaRecorder resources on unmount
+  useEffect(() => {
+    return () => {
+      clearMaxRecordingTimeout();
+      recordingCancelledRef.current = true;
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        try {
+          recorder.stop();
+        } catch {
+          // ignore stop errors during unmount
+        }
+      }
+      mediaRecorderRef.current = null;
+      stopMediaTracks();
+    };
+  }, [clearMaxRecordingTimeout, stopMediaTracks]);
 
   // Handle drag and drop
   const handleDragOver = useCallback(
@@ -113,9 +224,10 @@ export default function ChatFooter({
       const reader = new FileReader();
 
       reader.onload = () => {
-        const mimeType = BaseAttachmentSchema.shape.mimeType.safeParse(file.type);
+        const normalizedMime = normalizeAttachmentMimeType(file.type || "application/octet-stream");
+        const mimeType = InputAttachmentSchema.shape.mimeType.safeParse(normalizedMime);
         if (!mimeType.success) {
-          reject(new Error(`Invalid MIME type: ${file.type}`));
+          reject(new Error(`Invalid MIME type: ${file.type || normalizedMime}`));
           return;
         }
 
@@ -150,6 +262,171 @@ export default function ChatFooter({
       reader.readAsArrayBuffer(file);
     });
   }, []);
+
+  const finalizeRecording = useCallback(
+    async (blob: Blob, durationMs: number) => {
+      if (recordingCancelledRef.current) {
+        recordingCancelledRef.current = false;
+        return;
+      }
+
+      if (durationMs < MIN_RECORDING_MS || blob.size === 0) {
+        toastManager.warning("Recording was too short and was discarded.", { duration: 3000 });
+        return;
+      }
+
+      const mimeType = normalizeAttachmentMimeType(blob.type || "audio/webm");
+      const name = recordingFileName(mimeType);
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const file = createRecordingFile(bytes, name, mimeType);
+
+      if (file.size > MAX_FILE_SIZE) {
+        toastManager.warning(`"${file.name}" exceeds the 5MB limit and was not attached.`, { duration: 5000 });
+        return;
+      }
+
+      setIsProcessingFiles(true);
+      try {
+        const attachment = await readFileAsAttachment(file);
+        const seconds = (durationMs / 1000).toFixed(1);
+        attachment.attachment = {
+          ...attachment.attachment,
+          description: `Microphone recording (${seconds}s)`,
+        };
+        setAttachments(prev => [...prev, attachment]);
+      } catch (error: unknown) {
+        toastManager.error(`Failed to attach recording: ${formatError(error)}`, { duration: 5000 });
+      } finally {
+        setIsProcessingFiles(false);
+      }
+    },
+    [readFileAsAttachment],
+  );
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+    clearMaxRecordingTimeout();
+    try {
+      recorder.stop();
+    } catch (error: unknown) {
+      toastManager.error(`Failed to stop recording: ${formatError(error)}`, { duration: 5000 });
+      stopMediaTracks();
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+      setRecordingDurationMs(0);
+      recordingStartedAtRef.current = null;
+    }
+  }, [clearMaxRecordingTimeout, stopMediaTracks]);
+
+  const cancelRecording = useCallback(() => {
+    recordingCancelledRef.current = true;
+    recordedChunksRef.current = [];
+    clearMaxRecordingTimeout();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try {
+        recorder.stop();
+      } catch {
+        stopMediaTracks();
+        mediaRecorderRef.current = null;
+        setIsRecording(false);
+        setRecordingDurationMs(0);
+        recordingStartedAtRef.current = null;
+      }
+    } else {
+      stopMediaTracks();
+      setIsRecording(false);
+      setRecordingDurationMs(0);
+      recordingStartedAtRef.current = null;
+    }
+  }, [clearMaxRecordingTimeout, stopMediaTracks]);
+
+  const startRecording = useCallback(async () => {
+    if (!idle || isProcessingFiles || isRecording) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- can be null in the browser
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      toastManager.error("Audio recording is not supported in this browser.", { duration: 5000 });
+      return;
+    }
+
+    if (typeof MediaRecorder === "undefined") {
+      toastManager.error("Audio recording is not supported in this browser.", { duration: 5000 });
+      return;
+    }
+
+    const mimeType = pickRecorderMimeType();
+    if (!mimeType) {
+      toastManager.error("No supported audio recording format is available in this browser.", { duration: 5000 });
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      recordedChunksRef.current = [];
+      recordingCancelledRef.current = false;
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onerror = () => {
+        toastManager.error("Recording failed unexpectedly.", { duration: 5000 });
+        clearMaxRecordingTimeout();
+        stopMediaTracks();
+        mediaRecorderRef.current = null;
+        setIsRecording(false);
+        setRecordingDurationMs(0);
+        recordingStartedAtRef.current = null;
+      };
+
+      recorder.onstop = () => {
+        const durationMs = recordingStartedAtRef.current !== null ? Date.now() - recordingStartedAtRef.current : 0;
+        const blobType = recorder.mimeType || mimeType;
+        const blob = new Blob(recordedChunksRef.current, { type: blobType });
+        recordedChunksRef.current = [];
+        mediaRecorderRef.current = null;
+        clearMaxRecordingTimeout();
+        stopMediaTracks();
+        setIsRecording(false);
+        setRecordingDurationMs(0);
+        recordingStartedAtRef.current = null;
+        void finalizeRecording(blob, durationMs);
+      };
+
+      recordingStartedAtRef.current = Date.now();
+      setRecordingDurationMs(0);
+      setIsRecording(true);
+      recorder.start(250);
+
+      maxRecordingTimeoutRef.current = setTimeout(() => {
+        toastManager.warning("Maximum recording length reached (5 minutes).", { duration: 4000 });
+        stopRecording();
+      }, MAX_RECORDING_MS);
+    } catch (error: unknown) {
+      stopMediaTracks();
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+      setRecordingDurationMs(0);
+      recordingStartedAtRef.current = null;
+
+      const message = formatError(error);
+      if (/Permission|NotAllowed|denied/i.test(message)) {
+        toastManager.error("Microphone permission denied. Allow microphone access to record audio.", { duration: 5000 });
+      } else if (/NotFound|DevicesNotFound/i.test(message)) {
+        toastManager.error("No microphone was found on this device.", { duration: 5000 });
+      } else {
+        toastManager.error(`Failed to start recording: ${message}`, { duration: 5000 });
+      }
+    }
+  }, [clearMaxRecordingTimeout, finalizeRecording, idle, isProcessingFiles, isRecording, stopMediaTracks, stopRecording]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -237,6 +514,7 @@ export default function ChatFooter({
 
   // Handle submit with attachments
   const handleSubmitWithAttachments = useCallback(() => {
+    if (isRecording) return;
     const inputAttachments = attachments.length > 0 ? attachments.map(a => a.attachment) : undefined;
     onSubmit(inputAttachments);
     setAttachments([]);
@@ -244,7 +522,7 @@ export default function ChatFooter({
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [attachments, onSubmit]);
+  }, [attachments, isRecording, onSubmit]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Handle command suggestions with arrow keys
@@ -392,6 +670,51 @@ export default function ChatFooter({
           {/* Hidden file input for local file upload */}
           <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" aria-label="Upload files" />
 
+          {/* Live recording indicator */}
+          <AnimatePresence>
+            {isRecording && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-b border-primary/40 bg-error/5 px-4 py-3 flex items-center justify-between gap-3"
+                role="status"
+                aria-label="Recording in progress"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="relative flex h-3 w-3 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-error" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-mono text-error font-semibold">Recording audio…</p>
+                    <p className="text-xs font-mono text-muted">{formatRecordingDuration(recordingDurationMs)} · max 5:00</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={cancelRecording}
+                    className="px-2.5 py-1.5 rounded-md text-xs font-mono text-muted hover:text-primary hover:bg-hover transition-colors focus-ring"
+                    aria-label="Cancel recording"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    className="px-2.5 py-1.5 rounded-md text-xs font-mono bg-error/15 text-error hover:bg-error/25 transition-colors focus-ring flex items-center gap-1.5"
+                    aria-label="Stop recording and attach"
+                  >
+                    <Square className="w-3 h-3 fill-current" />
+                    Stop
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Attachments preview */}
           <AnimatePresence>
             {attachments.length > 0 && (
@@ -477,12 +800,18 @@ export default function ChatFooter({
                     target.style.height = `${target.scrollHeight}px`;
                   }}
                   onKeyDown={handleKeyDown}
-                  disabled={!idle}
+                  disabled={!idle || isRecording}
                   rows={1}
                   className={`w-full bg-transparent border-none focus:ring-0 resize-none text-sm font-mono text-primary placeholder-muted p-0 leading-relaxed outline-none transition-opacity ${
                     inputError ? "placeholder:text-error/50" : ""
-                  } ${!idle ? "opacity-60" : ""}`}
-                  placeholder={inputError ? "Please enter a message or command..." : "Execute command or send message..."}
+                  } ${!idle || isRecording ? "opacity-60" : ""}`}
+                  placeholder={
+                    isRecording
+                      ? "Recording… add a message or stop to attach audio"
+                      : inputError
+                        ? "Please enter a message, command, or attach a file..."
+                        : "Execute command or send message..."
+                  }
                   spellCheck="false"
                   aria-label="Command or message input"
                   aria-describedby={availableCommands.length > 0 ? "command-suggestions" : undefined}
@@ -500,7 +829,8 @@ export default function ChatFooter({
                   type="button"
                   aria-label="Send message"
                   onClick={handleSubmitWithAttachments}
-                  className="p-2 rounded-md hover:bg-hover transition-colors text-muted hover:text-primary focus-ring"
+                  disabled={isRecording}
+                  className="p-2 rounded-md hover:bg-hover transition-colors text-muted hover:text-primary focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -524,7 +854,7 @@ export default function ChatFooter({
                 type="button"
                 aria-label="Attach file"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={!idle || isProcessingFiles}
+                disabled={!idle || isProcessingFiles || isRecording}
                 className="p-1.5 rounded-md hover:bg-hover transition-colors text-muted hover:text-primary focus-ring disabled:opacity-50 disabled:cursor-not-allowed relative"
                 title={isProcessingFiles ? "Processing files..." : "Attach file"}
               >
@@ -536,12 +866,33 @@ export default function ChatFooter({
                   <Paperclip className="w-5 h-5" />
                 )}
               </button>
+              {/* Audio recording button */}
+              <button
+                type="button"
+                aria-label={isRecording ? "Stop recording" : "Record audio"}
+                aria-pressed={isRecording}
+                onClick={() => {
+                  if (isRecording) {
+                    stopRecording();
+                  } else {
+                    void startRecording();
+                  }
+                }}
+                disabled={!idle || isProcessingFiles}
+                className={`p-1.5 rounded-md transition-colors focus-ring disabled:opacity-50 disabled:cursor-not-allowed relative ${
+                  isRecording ? "bg-error/15 text-error hover:bg-error/25" : "hover:bg-hover text-muted hover:text-primary"
+                }`}
+                title={isRecording ? "Stop recording and attach" : "Record audio"}
+              >
+                <Mic className="w-5 h-5" />
+              </button>
               {/* Remote file browser button */}
               <button
                 type="button"
                 aria-label="Browse remote files"
                 onClick={() => setShowFileBrowser(true)}
-                className="p-1.5 rounded-md hover:bg-hover transition-colors text-muted hover:text-primary focus-ring"
+                disabled={isRecording}
+                className="p-1.5 rounded-md hover:bg-hover transition-colors text-muted hover:text-primary focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FolderOpen className="w-5 h-5" />
               </button>

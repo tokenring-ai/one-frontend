@@ -1,6 +1,6 @@
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import formatError from "@tokenring-ai/utility/error/formatError";
-import { Check, Copy, Download, File, FileCode, FileJson, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Check, Copy, Download, File, FileAudio, FileCode, FileJson, FileText, Image as ImageIcon, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { toastManager } from "../ui/toast.tsx";
 
@@ -10,7 +10,7 @@ interface AttachmentChipProps {
   showRemove?: boolean;
 }
 
-type AttachmentFamily = "image" | "json" | "code" | "text" | "document" | "generic";
+type AttachmentFamily = "image" | "audio" | "json" | "code" | "text" | "document" | "generic";
 
 const actionButtonClassName =
   "cursor-pointer rounded-md border border-primary bg-secondary p-1.5 text-muted shadow-sm backdrop-blur transition-colors hover:bg-hover hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 focus-ring";
@@ -29,8 +29,13 @@ function isTextAttachment(mimeType: string) {
   );
 }
 
+function isAudioAttachment(mimeType: string) {
+  return mimeType.startsWith("audio/");
+}
+
 function getAttachmentFamily(mimeType: string): AttachmentFamily {
   if (isImageAttachment(mimeType)) return "image";
+  if (isAudioAttachment(mimeType)) return "audio";
   if (mimeType.includes("json")) return "json";
   if (
     mimeType.includes("code") ||
@@ -68,6 +73,8 @@ function getAttachmentIcon(mimeType: string) {
   switch (family) {
     case "image":
       return <ImageIcon className="w-4 h-4" />;
+    case "audio":
+      return <FileAudio className="w-4 h-4" />;
     case "json":
       return <FileJson className="w-4 h-4" />;
     case "code":
@@ -89,6 +96,12 @@ function getAttachmentAccentClasses(mimeType: string) {
         panel: "bg-linear-to-br from-sky-100 via-cyan-50 to-violet-100 dark:from-sky-500/20 dark:via-cyan-500/10 dark:to-accent-subtle",
         badge: "bg-secondary text-sky-700 dark:text-sky-200 border-primary",
         icon: "text-sky-600 dark:text-sky-300",
+      };
+    case "audio":
+      return {
+        panel: "bg-linear-to-br from-violet-100 via-purple-50 to-fuchsia-100 dark:from-violet-500/20 dark:via-purple-500/10 dark:to-fuchsia-500/20",
+        badge: "bg-secondary text-violet-700 dark:text-violet-200 border-primary",
+        icon: "text-violet-600 dark:text-violet-300",
       };
     case "json":
       return {

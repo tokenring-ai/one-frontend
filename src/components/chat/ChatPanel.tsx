@@ -58,13 +58,15 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
   }, [availableCommands.data, input]);
 
   const handleSubmit = async (attachments?: InputAttachment[]) => {
-    if (!input.trim()) {
+    const hasAttachments = attachments !== undefined && attachments.length > 0;
+    const message = input.trim();
+    if (!message && !hasAttachments) {
       setInputError(true);
       setTimeout(() => setInputError(false), 1000);
       return;
     }
     if (!idle) return;
-    const message = input;
+    const previousInput = input;
     setInput("");
     clearInput(agentId);
     setInputError(false);
@@ -74,17 +76,19 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
         input: {
           from: "Chat webapp user",
           message,
-          ...(attachments !== undefined && { attachments }),
+          ...(hasAttachments && { attachments }),
         },
       });
-      const newHistory = [...(commandHistory.data || []), message].slice(-50);
-      await commandHistory.mutate(newHistory);
-      if (attachments && attachments.length > 0) {
+      if (message) {
+        const newHistory = [...(commandHistory.data || []), message].slice(-50);
+        await commandHistory.mutate(newHistory);
+      }
+      if (hasAttachments) {
         setSubmitFeedback({ message: `Sent ${attachments.length} attachment(s)`, type: "success" });
         setTimeout(() => setSubmitFeedback(null), 2000);
       }
     } catch (error) {
-      setInput(message);
+      setInput(previousInput);
       toastManager.error(formatError(error), { duration: 5000 });
       setSubmitFeedback({ message: "Failed to send", type: "error" });
       setTimeout(() => setSubmitFeedback(null), 2000);

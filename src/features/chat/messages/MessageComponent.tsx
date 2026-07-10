@@ -114,10 +114,17 @@ export default function MessageComponent({ msg, question, response }: MessageCom
             <MessageDetails details={messageDetails} />
 
             {hasAttachments && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {attachments.map((attachment, index) => (
-                  <AttachmentChip key={`${attachment.name}-${index}`} attachment={attachment} />
-                ))}
+              <div
+                className="mt-2 inline-block max-w-full rounded-md border border-primary bg-black/[0.05] px-2.5 py-2 shadow-sm dark:bg-white/[0.08]"
+                role="group"
+                aria-label="Attachments"
+              >
+                <div className="mb-1.5 text-2xs font-semibold uppercase tracking-widest text-muted">Attachments</div>
+                <div className="flex flex-row flex-wrap items-start gap-x-4 gap-y-1" role="list">
+                  {attachments.map((attachment, index) => (
+                    <AttachmentChip key={`${attachment.name}-${index}`} attachment={attachment} />
+                  ))}
+                </div>
               </div>
             )}
           </>

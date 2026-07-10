@@ -1,4 +1,4 @@
-import { type InputAttachment, InputAttachmentSchema } from "@tokenring-ai/agent/AgentEvents";
+import { type ChatAttachment, ChatAttachmentSchema } from "@tokenring-ai/agent/AgentEvents";
 import formatError from "@tokenring-ai/utility/error/formatError";
 import { AnimatePresence, motion } from "framer-motion";
 import { FileAudio, FileCode, File as FileIcon, FileText, FolderOpen, History, Image, Mic, Paperclip, Send, Square, X } from "lucide-react";
@@ -14,7 +14,7 @@ import { toastManager } from "../ui/toast.tsx";
 interface FileAttachment {
   id: string;
   file: File;
-  attachment: InputAttachment;
+  attachment: ChatAttachment;
 }
 
 interface ChatFooterProps {
@@ -30,7 +30,7 @@ interface ChatFooterProps {
   showHistory: boolean;
   setShowHistory: (value: boolean) => void;
   setShowFileBrowser: (value: boolean) => void;
-  onSubmit: (attachments?: InputAttachment[]) => void;
+  onSubmit: (attachments?: ChatAttachment[]) => void;
   submitFeedback: { message: string; type: "success" | "error" } | null;
 }
 
@@ -225,7 +225,7 @@ export default function ChatFooter({
 
       reader.onload = () => {
         const normalizedMime = normalizeAttachmentMimeType(file.type || "application/octet-stream");
-        const mimeType = InputAttachmentSchema.shape.mimeType.safeParse(normalizedMime);
+        const mimeType = ChatAttachmentSchema.shape.mimeType.safeParse(normalizedMime);
         if (!mimeType.success) {
           reject(new Error(`Invalid MIME type: ${file.type || normalizedMime}`));
           return;
@@ -242,13 +242,11 @@ export default function ChatFooter({
         }
         const base64 = btoa(binary);
 
-        const attachment: InputAttachment = {
-          type: "attachment",
+        const attachment: ChatAttachment = {
           name: file.name,
           encoding: "base64",
           mimeType: mimeType.data,
           body: base64,
-          timestamp: Date.now(),
         };
 
         resolve({

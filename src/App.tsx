@@ -19,7 +19,10 @@ import EmailApp from "./pages/apps/EmailApp.tsx";
 import FilesApp from "./pages/apps/FilesApp.tsx";
 import MediaApp from "./pages/apps/MediaApp.tsx";
 import MessagingApp from "./pages/apps/MessagingApp.tsx";
+import MetricsApp from "./pages/apps/MetricsApp.tsx";
 import PluginsApp from "./pages/apps/PluginsApp.tsx";
+import ResearchApp from "./pages/apps/ResearchApp.tsx";
+import SchedulerApp from "./pages/apps/SchedulerApp.tsx";
 import ServicesApp from "./pages/apps/ServicesApp.tsx";
 import SettingsApp from "./pages/apps/SettingsApp.tsx";
 import SocialApp from "./pages/apps/SocialApp.tsx";
@@ -114,8 +117,10 @@ export default function App() {
                     {/* App routes */}
                     <Route path="/agents" element={<AgentsApp />} />
                     <Route path="/workflows" element={<WorkflowsApp />} />
+                    <Route path="/scheduler" element={<SchedulerApp />} />
                     <Route path="/canvas" element={<CanvasApp />} />
                     <Route path="/documents" element={<DocumentsApp />} />
+                    <Route path="/research" element={<ResearchApp />} />
                     <Route path="/blog" element={<BlogApp />} />
                     <Route path="/files" element={<FilesApp />} />
                     <Route path="/terminal" element={<TerminalApp />} />
@@ -127,6 +132,7 @@ export default function App() {
                     <Route path="/stocks" element={<StocksApp />} />
                     <Route path="/plugins" element={<PluginsApp />} />
                     <Route path="/services" element={<ServicesApp />} />
+                    <Route path="/metrics" element={<MetricsApp />} />
                     <Route path="/settings" element={<SettingsApp />} />
                     <Route path="/vault" element={<VaultApp />} />
 

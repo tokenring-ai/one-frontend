@@ -12,8 +12,11 @@ import FileSystemRpcSchema from "@tokenring-ai/filesystem/rpc/schema";
 import ImageGenerationRpcSchema from "@tokenring-ai/image/rpc/schema";
 import LifecycleRpcSchema from "@tokenring-ai/lifecycle/rpc/schema";
 import MediaLibraryRpcSchema from "@tokenring-ai/media-library/rpc/schema";
+import MetricsRpcSchema from "@tokenring-ai/metrics/rpc/schema";
 import NewsRPMRpcSchema from "@tokenring-ai/newsrpm/rpc/schema";
 import type { IndexedDataSearch } from "@tokenring-ai/newsrpm/schema";
+import ResearchRpcSchema from "@tokenring-ai/research/rpc/schema";
+import SchedulerRpcSchema from "@tokenring-ai/scheduler/rpc/schema";
 import TasksRpcSchema from "@tokenring-ai/tasks/rpc/schema";
 import TerminalRpcSchema from "@tokenring-ai/terminal/rpc/schema";
 import { arrayableToArray } from "@tokenring-ai/utility/array/arrayable";
@@ -56,6 +59,9 @@ export const emailRPCClient = createWsRPCClient(baseURL, EmailRpcSchema);
 export const terminalRPCClient = createWsRPCClient(baseURL, TerminalRpcSchema);
 export const vaultRPCClient = createWsRPCClient(baseURL, VaultRpcSchema);
 export const tasksRPCClient = createWsRPCClient(baseURL, TasksRpcSchema);
+export const metricsRPCClient = createWsRPCClient(baseURL, MetricsRpcSchema);
+export const schedulerRPCClient = createWsRPCClient(baseURL, SchedulerRpcSchema);
+export const researchRPCClient = createWsRPCClient(baseURL, ResearchRpcSchema);
 
 export function useAvailableCommands(agentId: string) {
   return useTypedSWR(agentId ? `/agent/getAvailableCommands/${agentId}` : null, async () => {
@@ -309,6 +315,55 @@ export function useVaultKeys() {
     key: "vault-entries",
     subscribe: signal => vaultRPCClient.streamEntries({}, signal),
   });
+}
+
+export function useCostSummary() {
+  return useRPCStreamSWR({
+    key: "metrics-cost-summary",
+    subscribe: signal => metricsRPCClient.streamCostSummary({}, signal),
+  });
+}
+
+export function useSchedulerTasks(agentId: string | undefined) {
+  return useTypedSWR(
+    agentId ? `/scheduler/getTasks/${agentId}` : null,
+    async () => {
+      const result = await schedulerRPCClient.getTasks({ agentId: agentId! });
+      if (result.status === "agentNotFound") {
+        throw new Error(`Agent not found: ${agentId}`);
+      }
+      return result;
+    },
+    { refreshInterval: 5000 },
+  );
+}
+
+export function useSchedulerStatus(agentId: string | undefined) {
+  return useTypedSWR(
+    agentId ? `/scheduler/getStatus/${agentId}` : null,
+    async () => {
+      const result = await schedulerRPCClient.getStatus({ agentId: agentId! });
+      if (result.status === "agentNotFound") {
+        throw new Error(`Agent not found: ${agentId}`);
+      }
+      return result;
+    },
+    { refreshInterval: 3000 },
+  );
+}
+
+export function useSchedulerHistory(agentId: string | undefined, taskName?: string) {
+  return useTypedSWR(
+    agentId ? `/scheduler/getHistory/${agentId}/${taskName ?? ""}` : null,
+    async () => {
+      const result = await schedulerRPCClient.getHistory(stripUndefinedKeys({ agentId: agentId!, taskName: taskName || undefined }));
+      if (result.status === "agentNotFound") {
+        throw new Error(`Agent not found: ${agentId}`);
+      }
+      return result;
+    },
+    { refreshInterval: 5000 },
+  );
 }
 
 export function useImages(search?: string, limit?: number) {

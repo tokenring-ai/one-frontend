@@ -1,4 +1,4 @@
-import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
 import formatError from "@tokenring-ai/utility/error/formatError";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -57,7 +57,7 @@ export default function ChatPanel({ agentId }: ChatPanelProps) {
     return ret;
   }, [availableCommands.data, input]);
 
-  const handleSubmit = async (attachments?: InputAttachment[]) => {
+  const handleSubmit = async (attachments?: ChatAttachment[]) => {
     const hasAttachments = attachments !== undefined && attachments.length > 0;
     const message = input.trim();
     if (!message && !hasAttachments) {

@@ -1,192 +1,113 @@
-import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
+import type { ChatAttachment, SupportedMimeTypes } from "@tokenring-ai/agent/AgentEvents";
 import formatError from "@tokenring-ai/utility/error/formatError";
-import { Check, Copy, Download, File, FileAudio, FileCode, FileJson, FileText, Image as ImageIcon, X } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import { FocusTrap } from "focus-trap-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Eye,
+  FileAudio,
+  FileCode,
+  FileDiff,
+  FileJson,
+  FileText,
+  FileVideo,
+  Image as ImageIcon,
+  type LucideIcon,
+  Mail,
+  X,
+} from "lucide-react";
+import { type MouseEvent, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { toastManager } from "../ui/toast.tsx";
 
 interface AttachmentChipProps {
-  attachment: BaseAttachment;
+  attachment: ChatAttachment;
   onRemove?: () => void;
   showRemove?: boolean;
 }
 
-type AttachmentFamily = "image" | "audio" | "json" | "code" | "text" | "document" | "generic";
-
 const actionButtonClassName =
-  "cursor-pointer rounded-md border border-primary bg-secondary p-1.5 text-muted shadow-sm backdrop-blur transition-colors hover:bg-hover hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 focus-ring";
+  "cursor-pointer rounded-md p-1 text-muted transition-colors hover:bg-hover hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 focus-ring";
+
+const mimeTypeIcons: Record<SupportedMimeTypes, LucideIcon> = {
+  "audio/wav": FileAudio,
+  "audio/mpeg": FileAudio,
+  "audio/webm": FileAudio,
+  "video/mp4": FileVideo,
+  "video/webm": FileVideo,
+  "image/png": ImageIcon,
+  "image/jpeg": ImageIcon,
+  "text/plain": FileText,
+  "text/markdown": FileText,
+  "text/html": FileCode,
+  "text/x-diff": FileDiff,
+  "application/json": FileJson,
+  "message/rfc822": Mail,
+};
 
 function isImageAttachment(mimeType: string) {
   return mimeType.startsWith("image/");
-}
-
-function isTextAttachment(mimeType: string) {
-  return (
-    mimeType.startsWith("text/") ||
-    mimeType.includes("json") ||
-    mimeType.includes("markdown") ||
-    mimeType.includes("javascript") ||
-    mimeType.includes("typescript")
-  );
 }
 
 function isAudioAttachment(mimeType: string) {
   return mimeType.startsWith("audio/");
 }
 
-function getAttachmentFamily(mimeType: string): AttachmentFamily {
-  if (isImageAttachment(mimeType)) return "image";
-  if (isAudioAttachment(mimeType)) return "audio";
-  if (mimeType.includes("json")) return "json";
-  if (
-    mimeType.includes("code") ||
-    mimeType.includes("script") ||
-    mimeType.includes("javascript") ||
-    mimeType.includes("typescript") ||
-    mimeType.includes("html") ||
-    mimeType.includes("css") ||
-    mimeType.includes("python") ||
-    mimeType.includes("java") ||
-    mimeType.includes("c++") ||
-    mimeType.includes("c#")
-  ) {
-    return "code";
-  }
-  if (mimeType.includes("text") || mimeType.includes("markdown") || mimeType.includes("plain")) {
-    return "text";
-  }
-  if (
-    mimeType.includes("pdf") ||
-    mimeType.includes("word") ||
-    mimeType.includes("document") ||
-    mimeType.includes("presentation") ||
-    mimeType.includes("sheet") ||
-    mimeType.includes("excel")
-  ) {
-    return "document";
-  }
-  return "generic";
+function isVideoAttachment(mimeType: string) {
+  return mimeType.startsWith("video/");
 }
 
-function getAttachmentIcon(mimeType: string) {
-  const family = getAttachmentFamily(mimeType);
-
-  switch (family) {
-    case "image":
-      return <ImageIcon className="w-4 h-4" />;
-    case "audio":
-      return <FileAudio className="w-4 h-4" />;
-    case "json":
-      return <FileJson className="w-4 h-4" />;
-    case "code":
-      return <FileCode className="w-4 h-4" />;
-    case "text":
-    case "document":
-      return <FileText className="w-4 h-4" />;
-    default:
-      return <File className="w-4 h-4" />;
-  }
+function isTextAttachment(mimeType: string) {
+  return (
+    mimeType.startsWith("text/") ||
+    mimeType === "application/json" ||
+    mimeType === "message/rfc822" ||
+    mimeType.includes("json") ||
+    mimeType.includes("markdown")
+  );
 }
 
-function getAttachmentAccentClasses(mimeType: string) {
-  const family = getAttachmentFamily(mimeType);
-
-  switch (family) {
-    case "image":
-      return {
-        panel: "bg-linear-to-br from-sky-100 via-cyan-50 to-violet-100 dark:from-sky-500/20 dark:via-cyan-500/10 dark:to-accent-subtle",
-        badge: "bg-secondary text-sky-700 dark:text-sky-200 border-primary",
-        icon: "text-sky-600 dark:text-sky-300",
-      };
-    case "audio":
-      return {
-        panel: "bg-linear-to-br from-violet-100 via-purple-50 to-fuchsia-100 dark:from-violet-500/20 dark:via-purple-500/10 dark:to-fuchsia-500/20",
-        badge: "bg-secondary text-violet-700 dark:text-violet-200 border-primary",
-        icon: "text-violet-600 dark:text-violet-300",
-      };
-    case "json":
-      return {
-        panel: "bg-linear-to-br from-amber-100 via-orange-50 to-yellow-100 dark:from-amber-500/20 dark:via-orange-500/10 dark:to-yellow-500/20",
-        badge: "bg-secondary text-amber-700 dark:text-amber-200 border-primary",
-        icon: "text-amber-600 dark:text-amber-300",
-      };
-    case "code":
-      return {
-        panel: "bg-linear-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-500/20 dark:via-teal-500/10 dark:to-cyan-500/20",
-        badge: "bg-secondary text-emerald-700 dark:text-emerald-200 border-primary",
-        icon: "text-emerald-600 dark:text-emerald-300",
-      };
-    case "text":
-      return {
-        panel: "bg-linear-to-br from-violet-100 via-fuchsia-50 to-pink-100 dark:from-violet-500/20 dark:via-fuchsia-500/10 dark:to-pink-500/20",
-        badge: "bg-secondary text-violet-700 dark:text-violet-200 border-primary",
-        icon: "text-violet-600 dark:text-violet-300",
-      };
-    case "document":
-      return {
-        panel: "bg-linear-to-br from-rose-100 via-orange-50 to-amber-100 dark:from-rose-500/20 dark:via-orange-500/10 dark:to-amber-500/20",
-        badge: "bg-secondary text-rose-700 dark:text-rose-200 border-primary",
-        icon: "text-rose-600 dark:text-rose-300",
-      };
-    default:
-      return {
-        panel: "bg-linear-to-br from-slate-100 via-zinc-50 to-stone-100 dark:from-slate-500/20 dark:via-zinc-500/10 dark:to-stone-500/20",
-        badge: "bg-secondary text-muted border-primary",
-        icon: "text-muted",
-      };
-  }
+function getAttachmentIcon(mimeType: SupportedMimeTypes): LucideIcon {
+  return mimeTypeIcons[mimeType];
 }
 
-function getMimeLabel(mimeType: string) {
-  const subtype = mimeType.split("/").pop() ?? mimeType;
-  return subtype.replace("vnd.", "").replace(/\./g, " ").toUpperCase();
-}
-
-function getAttachmentExtension(name: string, mimeType: string) {
-  const extension = name.split(".").pop();
-  if (extension && extension !== name) {
-    return extension.toUpperCase();
-  }
-
-  return getMimeLabel(mimeType);
-}
-
-function decodeAttachmentText(attachment: BaseAttachment): string {
+function decodeAttachmentText(attachment: ChatAttachment): string {
   if (attachment.encoding === "base64") {
     return atob(attachment.body);
   }
-
   return attachment.body;
 }
 
-function getAttachmentPreview(attachment: BaseAttachment): string {
-  if (!isTextAttachment(attachment.mimeType)) {
-    return "";
-  }
-
-  try {
-    return decodeAttachmentText(attachment).replace(/\s+/g, " ").trim().slice(0, 140);
-  } catch {
-    return "";
-  }
-}
-
-function getImagePreviewSrc(attachment: BaseAttachment): string | null {
-  if (!isImageAttachment(attachment.mimeType)) {
-    return null;
-  }
-
+function getMediaSrc(attachment: ChatAttachment): string | null {
   if (attachment.encoding === "href") {
     return attachment.body;
   }
-
   if (attachment.encoding === "base64") {
     return `data:${attachment.mimeType};base64,${attachment.body}`;
   }
-
   return `data:${attachment.mimeType};charset=utf-8,${encodeURIComponent(attachment.body)}`;
 }
 
-function downloadAttachment(attachment: BaseAttachment) {
+function getImagePreviewSrc(attachment: ChatAttachment): string | null {
+  if (!isImageAttachment(attachment.mimeType)) {
+    return null;
+  }
+  return getMediaSrc(attachment);
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  // Uint8Array.buffer is typed as ArrayBufferLike; this view always owns a plain ArrayBuffer.
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+}
+
+function downloadAttachment(attachment: ChatAttachment) {
   if (attachment.encoding === "href") {
     const a = document.createElement("a");
     a.href = attachment.body;
@@ -199,19 +120,10 @@ function downloadAttachment(attachment: BaseAttachment) {
     return;
   }
 
-  let blob: Blob;
-
-  if (attachment.encoding === "base64") {
-    const binaryString = atob(attachment.body);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    blob = new Blob([bytes], { type: attachment.mimeType });
-  } else {
-    blob = new Blob([attachment.body], { type: attachment.mimeType });
-  }
+  const blob =
+    attachment.encoding === "base64"
+      ? new Blob([base64ToArrayBuffer(attachment.body)], { type: attachment.mimeType })
+      : new Blob([attachment.body], { type: attachment.mimeType });
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -226,42 +138,113 @@ function downloadAttachment(attachment: BaseAttachment) {
   }, 100);
 }
 
-function formatFileSize(attachment: BaseAttachment): string {
+function formatPreviewText(attachment: ChatAttachment): string {
   try {
-    let byteSize: number;
-
-    if (attachment.encoding === "base64") {
-      byteSize = Math.floor(attachment.body.length * 0.75);
-    } else {
-      byteSize = new TextEncoder().encode(attachment.body).length;
+    const text = decodeAttachmentText(attachment);
+    if (attachment.mimeType === "application/json") {
+      try {
+        return JSON.stringify(JSON.parse(text), null, 2);
+      } catch {
+        return text;
+      }
     }
-
-    if (byteSize < 1024) {
-      return `${byteSize} B`;
-    }
-    if (byteSize < 1024 * 1024) {
-      return `${(byteSize / 1024).toFixed(1)} KB`;
-    }
-    return `${(byteSize / (1024 * 1024)).toFixed(1)} MB`;
+    return text;
   } catch {
     return "";
   }
 }
 
+function AttachmentPreviewOverlay({ attachment, onClose }: { attachment: ChatAttachment; onClose: () => void }) {
+  const mediaSrc = useMemo(() => getMediaSrc(attachment), [attachment]);
+  const previewText = useMemo(() => (isTextAttachment(attachment.mimeType) ? formatPreviewText(attachment) : ""), [attachment]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <FocusTrap
+      focusTrapOptions={{
+        allowOutsideClick: true,
+        escapeDeactivates: false,
+        fallbackFocus: "#attachment-preview-dialog",
+      }}
+    >
+      <div
+        id="attachment-preview-dialog"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="attachment-preview-title"
+        tabIndex={-1}
+        onClick={onClose}
+      >
+        <div
+          className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-primary bg-secondary shadow-xl"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-primary px-4 py-3">
+            <div className="min-w-0">
+              <h3 id="attachment-preview-title" className="truncate text-sm font-semibold text-primary">
+                {attachment.name}
+              </h3>
+              <p className="truncate text-xs text-muted">{attachment.mimeType}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-hover hover:text-primary focus-ring"
+              aria-label="Close preview"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-auto p-4">
+            {isImageAttachment(attachment.mimeType) && mediaSrc ? (
+              <img src={mediaSrc} alt={attachment.name} className="mx-auto max-h-[70vh] max-w-full rounded-md object-contain" />
+            ) : isAudioAttachment(attachment.mimeType) && mediaSrc ? (
+              <audio controls className="w-full" src={mediaSrc}>
+                <track kind="captions" />
+              </audio>
+            ) : isVideoAttachment(attachment.mimeType) && mediaSrc ? (
+              <video controls className="mx-auto max-h-[70vh] max-w-full rounded-md" src={mediaSrc}>
+                <track kind="captions" />
+              </video>
+            ) : attachment.mimeType === "text/html" ? (
+              <iframe title={attachment.name} srcDoc={previewText} sandbox="" className="h-[60vh] w-full rounded-md border border-primary bg-primary" />
+            ) : previewText ? (
+              <pre className="overflow-auto whitespace-pre-wrap break-words rounded-md border border-primary bg-tertiary p-3 text-xs text-primary font-mono">
+                {previewText}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted">No preview available for this attachment.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </FocusTrap>
+  );
+}
+
 export default function AttachmentChip({ attachment, onRemove, showRemove = false }: AttachmentChipProps) {
-  const icon = getAttachmentIcon(attachment.mimeType);
-  const preview = getAttachmentPreview(attachment);
-  const fileSize = formatFileSize(attachment);
+  const Icon = getAttachmentIcon(attachment.mimeType);
   const imageSrc = useMemo(() => getImagePreviewSrc(attachment), [attachment]);
-  const extension = useMemo(() => getAttachmentExtension(attachment.name, attachment.mimeType), [attachment]);
-  const accent = useMemo(() => getAttachmentAccentClasses(attachment.mimeType), [attachment.mimeType]);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const showImagePreview = Boolean(imageSrc && !imageError);
+  const showImageThumb = Boolean(imageSrc && !imageError);
 
-  const handleDownload = (e?: React.MouseEvent | React.KeyboardEvent) => {
+  const handleDownload = (e?: MouseEvent) => {
     e?.stopPropagation();
     setDownloading(true);
     try {
@@ -273,16 +256,19 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
     }
   };
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleCopy = async (e: MouseEvent) => {
     e.stopPropagation();
-    onRemove?.();
-  };
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-
     try {
-      await navigator.clipboard.writeText(decodeAttachmentText(attachment));
+      if (attachment.encoding === "href") {
+        await navigator.clipboard.writeText(attachment.body);
+      } else if (isTextAttachment(attachment.mimeType)) {
+        await navigator.clipboard.writeText(decodeAttachmentText(attachment));
+      } else if (isImageAttachment(attachment.mimeType) && attachment.encoding === "base64" && typeof ClipboardItem !== "undefined") {
+        const blob = new Blob([base64ToArrayBuffer(attachment.body)], { type: attachment.mimeType });
+        await navigator.clipboard.write([new ClipboardItem({ [attachment.mimeType]: blob })]);
+      } else {
+        await navigator.clipboard.writeText(attachment.body);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error: unknown) {
@@ -290,109 +276,80 @@ export default function AttachmentChip({ attachment, onRemove, showRemove = fals
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleDownload(e);
-    }
+  const handlePreview = (e: MouseEvent) => {
+    e.stopPropagation();
+    setPreviewOpen(true);
+  };
+
+  const handleRemove = (e: MouseEvent) => {
+    e.stopPropagation();
+    onRemove?.();
   };
 
   return (
     <div
-      className="group relative flex w-[220px] max-w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-primary bg-secondary shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-hover"
+      className="group flex max-w-full items-center gap-2 py-0.5 text-sm"
+      style={{ flex: "0 1 350px", width: 350 }}
       role="listitem"
       aria-label={`Attachment: ${attachment.name}`}
-      onClick={() => handleDownload()}
-      onKeyDown={handleKeyDown}
     >
-      <div className="relative aspect-[4/3] overflow-hidden border-b border-primary">
-        {showImagePreview ? (
-          <>
-            <img
-              src={imageSrc!}
-              alt={attachment.name}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              loading="lazy"
-              onError={() => setImageError(true)}
-            />
-            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between border-t border-primary bg-secondary px-3 py-2">
-              <span className="text-xs font-medium text-primary truncate">Preview</span>
-              <span className="rounded-md border border-primary bg-tertiary px-2 py-1 text-2xs font-semibold uppercase tracking-[0.18em] text-primary">
-                {extension}
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className={`relative flex h-full w-full items-center justify-center overflow-hidden ${accent.panel}`}>
-            <div className="absolute -left-6 top-4 h-16 w-16 rounded-full bg-secondary blur-2xl" />
-            <div className="absolute bottom-3 right-3 h-20 w-20 rounded-full bg-tertiary blur-2xl" />
-            <div className="absolute inset-x-5 top-5 h-px bg-secondary" />
-            <div className="absolute inset-x-5 top-9 h-px bg-tertiary" />
-            <div className={`relative flex flex-col items-center gap-3 ${accent.icon}`}>
-              <div className={`relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary bg-secondary shadow-md`}>
-                {React.cloneElement(icon, { className: "w-7 h-7" })}
-              </div>
-              <span className={`rounded-md border px-2.5 py-1 text-2xs font-semibold uppercase tracking-[0.18em] ${accent.badge}`}>{extension}</span>
-            </div>
-          </div>
-        )}
+      {showImageThumb ? (
+        <img src={imageSrc!} alt="" className="h-5 w-5 shrink-0 rounded object-cover" loading="lazy" onError={() => setImageError(true)} />
+      ) : (
+        <Icon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+      )}
 
-        <div className="absolute right-2 top-2 flex items-center gap-1">
-          {isTextAttachment(attachment.mimeType) && (
-            <button
-              type="button"
-              onClick={handleCopy}
-              className={actionButtonClassName}
-              title={`Copy ${attachment.name} to clipboard`}
-              aria-label={`Copy ${attachment.name} to clipboard`}
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
+      <span className="min-w-0 flex-1 truncate font-mono text-primary" title={attachment.name}>
+        {attachment.name}
+      </span>
+
+      <div className="flex shrink-0 items-center gap-0.5">
+        <button
+          type="button"
+          onClick={handlePreview}
+          className={actionButtonClassName}
+          title={`Preview ${attachment.name}`}
+          aria-label={`Preview ${attachment.name}`}
+        >
+          <Eye className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={actionButtonClassName}
+          title={`Copy ${attachment.name} to clipboard`}
+          aria-label={`Copy ${attachment.name} to clipboard`}
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className={actionButtonClassName}
+          title={downloading ? `Downloading ${attachment.name}...` : `Download ${attachment.name}`}
+          aria-label={downloading ? `Downloading ${attachment.name}...` : `Download ${attachment.name}`}
+          disabled={downloading}
+        >
+          {downloading ? (
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
           )}
+        </button>
+        {showRemove && onRemove && (
           <button
             type="button"
-            onClick={handleDownload}
-            className={actionButtonClassName}
-            title={downloading ? `Downloading ${attachment.name}...` : `Download ${attachment.name}`}
-            aria-label={downloading ? `Downloading ${attachment.name}...` : `Download ${attachment.name}`}
-            disabled={downloading}
+            onClick={handleRemove}
+            className={`${actionButtonClassName} hover:text-red-500`}
+            title={`Remove ${attachment.name}`}
+            aria-label={`Remove ${attachment.name}`}
           >
-            {downloading ? (
-              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
+            <X className="h-3.5 w-3.5" />
           </button>
-          {showRemove && onRemove && (
-            <button
-              type="button"
-              onClick={handleRemove}
-              className={`${actionButtonClassName} hover:text-red-500`}
-              title={`Remove ${attachment.name}`}
-              aria-label={`Remove ${attachment.name}`}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
-      <div className="space-y-2 p-3">
-        <div className="space-y-1">
-          <div className="line-clamp-2 text-sm font-semibold leading-snug text-primary" title={attachment.name}>
-            {attachment.name}
-          </div>
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-dim">
-            {fileSize && <span>{fileSize}</span>}
-            <span className="h-1 w-1 rounded-full bg-current/50" />
-            <span className="truncate" title={attachment.mimeType}>
-              {getMimeLabel(attachment.mimeType)}
-            </span>
-          </div>
-        </div>
-
-        {preview && <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-muted">{preview}</p>}
-      </div>
+      {previewOpen && createPortal(<AttachmentPreviewOverlay attachment={attachment} onClose={() => setPreviewOpen(false)} />, document.body)}
     </div>
   );
 }

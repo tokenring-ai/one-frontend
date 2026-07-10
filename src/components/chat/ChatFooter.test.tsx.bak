@@ -1,28 +1,28 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { afterEach,beforeEach,describe,expect,it,mock } from "bun:test";
 import ChatFooter from "./ChatFooter.tsx";
 
 const warningMock = mock();
 const errorMock = mock();
 
-void mock.module("../ui/toast.tsx", () => ({
+mock.module("../ui/toast.tsx", () => ({
   toastManager: {
     warning: warningMock,
     error: errorMock,
   },
 }));
 
-void mock.module("../../rpc.ts", () => ({
+mock.module("../../rpc.ts", () => ({
   agentRPCClient: {
     abortCurrentOperation: mock(),
   },
 }));
 
-void mock.module("../HookSelector.tsx", () => ({ default: () => null }));
-void mock.module("../ModelSelector.tsx", () => ({ default: () => null }));
-void mock.module("../SubAgentSelector.tsx", () => ({ default: () => null }));
-void mock.module("../ToolSelector.tsx", () => ({ default: () => null }));
+mock.module("../HookSelector.tsx", () => ({ default: () => null }));
+mock.module("../ModelSelector.tsx", () => ({ default: () => null }));
+mock.module("../SubAgentSelector.tsx", () => ({ default: () => null }));
+mock.module("../ToolSelector.tsx", () => ({ default: () => null }));
 
 function renderChatFooter(overrides: Partial<Parameters<typeof ChatFooter>[0]> = {}) {
   const props = {
@@ -70,42 +70,26 @@ class MockMediaRecorder {
   }
 }
 
-const originalMediaRecorder = (globalThis as { MediaRecorder?: unknown }).MediaRecorder;
-const originalFileReader = globalThis.FileReader;
-
 function stubMediaDevices() {
   const trackStop = mock();
   const stream = {
     getTracks: () => [{ stop: trackStop }],
   } as unknown as MediaStream;
 
-  const getUserMedia = mock(() => Promise.resolve(stream));
+  const getUserMedia = mock().mockResolvedValue(stream);
   Object.defineProperty(navigator, "mediaDevices", {
     configurable: true,
     value: { getUserMedia },
   });
 
-  (globalThis as unknown as { MediaRecorder: typeof MockMediaRecorder }).MediaRecorder = MockMediaRecorder;
+  (global as any).MediaRecorder = MockMediaRecorder;
 
   return { getUserMedia, trackStop, stream };
-}
-
-function restoreMediaGlobals() {
-  if (originalMediaRecorder !== undefined) {
-    (globalThis as { MediaRecorder: unknown }).MediaRecorder = originalMediaRecorder;
-  } else {
-    delete (globalThis as { MediaRecorder?: unknown }).MediaRecorder;
-  }
-  globalThis.FileReader = originalFileReader;
 }
 
 describe("ChatFooter file attachments", () => {
   beforeEach(() => {
     mock.clearAllMocks();
-  });
-
-  afterEach(() => {
-    restoreMediaGlobals();
   });
 
   it("shows a warning toast when a file exceeds the size limit", async () => {
@@ -135,7 +119,7 @@ describe("ChatFooter file attachments", () => {
       });
     }
 
-    (globalThis as { FileReader: unknown }).FileReader = FailingFileReader;
+    (global as any).FileReader = FailingFileReader;
 
     const user = userEvent.setup();
     renderChatFooter();
@@ -148,6 +132,9 @@ describe("ChatFooter file attachments", () => {
       expect(errorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to read "broken.txt":'), { duration: 5000 });
       expect(errorMock.mock.calls[0]?.[0]).toContain("Failed to read file");
     });
+
+    delete (global as any).MediaRecorder;
+    delete (global as any).FileReader;
   });
 });
 
@@ -157,7 +144,8 @@ describe("ChatFooter audio recording", () => {
   });
 
   afterEach(() => {
-    restoreMediaGlobals();
+    delete (global as any).MediaRecorder;
+    delete (global as any).FileReader;
   });
 
   it("starts recording when the mic button is clicked", async () => {
@@ -175,8 +163,9 @@ describe("ChatFooter audio recording", () => {
   });
 
   it("attaches recorded audio after stop", async () => {
+    jest.useFakeTimers({ shouldAdvanceTime: true });
     stubMediaDevices();
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: () => jest.advanceTimersByTime(100) });
     renderChatFooter();
 
     await user.click(screen.getByRole("button", { name: "Record audio" }));
@@ -184,23 +173,32 @@ describe("ChatFooter audio recording", () => {
       expect(screen.getByRole("status", { name: "Recording in progress" })).toBeInTheDocument();
     });
 
-    // Past MIN_RECORDING_MS (150) so finalizeRecording keeps the clip
+    // Advance past the minimum recording duration so the clip is kept
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      jest.advanceTimersByTime(300);
     });
 
     await user.click(screen.getByRole("button", { name: "Stop recording and attach" }));
+
+    await act(async () => {
+      // Flush async finalizeRecording (arrayBuffer + FileReader)
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Record audio" })).toHaveAttribute("aria-pressed", "false");
       expect(screen.getByText(/recording-/)).toBeInTheDocument();
       expect(screen.getByText(/1 file/)).toBeInTheDocument();
     });
+
+    jest.useRealTimers();
   });
 
   it("discards recording when cancelled", async () => {
+    jest.useFakeTimers({ shouldAdvanceTime: true });
     stubMediaDevices();
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: () => jest.advanceTimersByTime(100) });
     renderChatFooter();
 
     await user.click(screen.getByRole("button", { name: "Record audio" }));
@@ -209,7 +207,7 @@ describe("ChatFooter audio recording", () => {
     });
 
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      jest.advanceTimersByTime(300);
     });
 
     await user.click(screen.getByRole("button", { name: "Cancel recording" }));
@@ -218,16 +216,18 @@ describe("ChatFooter audio recording", () => {
       expect(screen.getByRole("button", { name: "Record audio" })).toHaveAttribute("aria-pressed", "false");
       expect(screen.queryByText(/recording-/)).not.toBeInTheDocument();
     });
+
+    jest.useRealTimers();
   });
 
   it("shows an error when microphone permission is denied", async () => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
-        getUserMedia: mock(() => Promise.reject(new Error("NotAllowedError: Permission denied"))),
+        getUserMedia: mock().mockRejectedValue(new Error("NotAllowedError: Permission denied")),
       },
     });
-    (globalThis as unknown as { MediaRecorder: typeof MockMediaRecorder }).MediaRecorder = MockMediaRecorder;
+(global as any).MediaRecorder = MockMediaRecorder;
 
     const user = userEvent.setup();
     renderChatFooter();

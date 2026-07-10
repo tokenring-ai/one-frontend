@@ -1,6 +1,13 @@
 // eslint-disable @typescript-eslint/no-unnecessary-condition -- this is a test file
 
-import "@testing-library/jest-dom/vitest";
+import { afterEach } from "bun:test";
+import { cleanup } from "@testing-library/react";
+import "@testing-library/jest-dom";
+
+// RTL does not auto-cleanup under Bun; clear the DOM between tests.
+afterEach(() => {
+  cleanup();
+});
 
 if (typeof window !== "undefined" && !window.matchMedia) {
   window.matchMedia = (query: string) => ({

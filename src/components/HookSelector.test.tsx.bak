@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it } from "bun:test";
+import { mock } from "bun:test";
 import { useAvailableHooks, useEnabledHooks } from "../rpc.ts";
 import HookSelector from "./HookSelector";
 
@@ -8,7 +9,7 @@ const enableHooksMock = mock();
 const disableHooksMock = mock();
 const toastErrorMock = mock();
 
-void mock.module("../rpc.ts", () => ({
+mock.module("../rpc.ts", () => ({
   lifecycleRPCClient: {
     enableHooks: enableHooksMock,
     disableHooks: disableHooksMock,
@@ -17,7 +18,7 @@ void mock.module("../rpc.ts", () => ({
   useEnabledHooks: mock(),
 }));
 
-void mock.module("./ui/toast.tsx", () => ({
+mock.module("./ui/toast.tsx", () => ({
   toastManager: {
     error: toastErrorMock,
   },

@@ -1,12 +1,17 @@
-import { afterEach, describe, expect, it, jest, mock } from "bun:test";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "bun:test";
+import { mock } from "bun:test";
 import { useRPCStream } from "./useRPCStream.ts";
 
 afterEach(() => {
   jest.useRealTimers();
 });
 
-async function* createGenerator<T>(chunks: T[], signal: AbortSignal, options?: { throwAfter?: number; hangAfterLast?: boolean }) {
+async function* createGenerator<T>(
+  chunks: T[],
+  signal: AbortSignal,
+  options?: { throwAfter?: number; hangAfterLast?: boolean },
+) {
   for (let index = 0; index < chunks.length; index++) {
     if (signal.aborted) return;
     if (options?.throwAfter !== undefined && index === options.throwAfter) {
@@ -131,7 +136,7 @@ describe("useRPCStream", () => {
     expect(result.current.error).toContain("stream failed");
 
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await jest.advanceTimersByTimeAsync(100);
       await Promise.resolve();
     });
 

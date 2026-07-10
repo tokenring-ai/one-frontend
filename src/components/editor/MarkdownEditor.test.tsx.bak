@@ -1,8 +1,8 @@
-import { describe, expect, it, mock } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, mock } from "bun:test";
 import MarkdownEditor from "./MarkdownEditor.tsx";
 
-void mock.module("@uiw/react-md-editor", () => ({
+mock.module("@uiw/react-md-editor", () => ({
   default: ({ value }: { value: string }) => <textarea aria-label="md-editor" readOnly value={value} />,
 }));
 

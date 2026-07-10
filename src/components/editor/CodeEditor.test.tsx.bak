@@ -1,12 +1,12 @@
-import { describe, expect, it, mock } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, mock } from "bun:test";
 import CodeEditor from "./CodeEditor.tsx";
 
-void mock.module("@monaco-editor/react", () => ({
+mock.module("@monaco-editor/react", () => ({
   default: ({ value }: { value: string }) => <textarea aria-label="monaco-editor" readOnly value={value} />,
 }));
 
-void mock.module("../../hooks/useTheme.ts", () => ({
+mock.module("../../hooks/useTheme.ts", () => ({
   useTheme: () => ["dark"],
 }));
 

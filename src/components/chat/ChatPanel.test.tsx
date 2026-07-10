@@ -1,47 +1,54 @@
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatInputProvider } from "../ChatInputContext.tsx";
 import ChatPanel from "./ChatPanel.tsx";
 
-const { sendInputMock } = vi.hoisted(() => ({
-  sendInputMock: vi.fn(),
+const sendInputMock = mock();
+const useAgentEventStateMock = mock(() => ({
+  messages: [],
+  agentStatus: { status: "running", inputExecutionQueue: [], currentActivity: "" },
+  currentExecutionState: null,
+  isConnecting: false,
+  connectionError: null,
+  reconnectAttempts: 0,
+  agentNotFound: false,
+  manualReconnect: mock(),
 }));
 
-vi.mock("../../hooks/useAgentEventState.ts", () => ({
-  useAgentEventState: vi.fn(() => ({
-    messages: [],
-    agentStatus: { status: "running", inputExecutionQueue: [], currentActivity: "" },
-    currentExecutionState: null,
-    isConnecting: false,
-    connectionError: null,
-    reconnectAttempts: 0,
-    agentNotFound: false,
-    manualReconnect: vi.fn(),
-  })),
+void mock.module("../../hooks/useAgentEventState.ts", () => ({
+  useAgentEventState: useAgentEventStateMock,
 }));
 
-vi.mock("../../rpc.ts", () => ({
+void mock.module("../../rpc.ts", () => ({
   agentRPCClient: {
     sendInput: sendInputMock,
   },
-  useAvailableCommands: vi.fn(() => ({ data: [] })),
-  useCommandHistory: vi.fn(() => ({ data: [], mutate: vi.fn() })),
+  useAvailableCommands: mock(() => ({ data: [] })),
+  useCommandHistory: mock(() => ({ data: [], mutate: mock() })),
 }));
 
-vi.mock("./AutoScrollContainer.tsx", () => ({
+void mock.module("./AutoScrollContainer.tsx", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
-vi.mock("./MessageList.tsx", () => ({ default: () => null }));
-vi.mock("./PendingQuestions.tsx", () => ({ default: () => null }));
-vi.mock("./ConnectionStatusBanner.tsx", () => ({ default: () => null }));
-vi.mock("../overlay/file-browser.tsx", () => ({ default: () => null }));
-vi.mock("../HookSelector.tsx", () => ({ default: () => null }));
-vi.mock("../ModelSelector.tsx", () => ({ default: () => null }));
-vi.mock("../SubAgentSelector.tsx", () => ({ default: () => null }));
-vi.mock("../ToolSelector.tsx", () => ({ default: () => null }));
+void mock.module("./MessageList.tsx", () => ({ default: () => null }));
+void mock.module("./PendingQuestions.tsx", () => ({ default: () => null }));
+void mock.module("./ConnectionStatusBanner.tsx", () => ({ default: () => null }));
+void mock.module("../overlay/file-browser.tsx", () => ({ default: () => null }));
+void mock.module("../HookSelector.tsx", () => ({ default: () => null }));
+void mock.module("../ModelSelector.tsx", () => ({ default: () => null }));
+void mock.module("../SubAgentSelector.tsx", () => ({ default: () => null }));
+void mock.module("../ToolSelector.tsx", () => ({ default: () => null }));
+void mock.module("../ui/toast.tsx", () => ({
+  toastManager: {
+    error: mock(),
+    warning: mock(),
+    success: mock(),
+    info: mock(),
+  },
+}));
 
 function renderChatPanel(agentId = "test-agent") {
   return render(
@@ -55,7 +62,17 @@ function renderChatPanel(agentId = "test-agent") {
 
 describe("ChatPanel", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.clearAllMocks();
+    useAgentEventStateMock.mockReturnValue({
+      messages: [],
+      agentStatus: { status: "running", inputExecutionQueue: [], currentActivity: "" },
+      currentExecutionState: null,
+      isConnecting: false,
+      connectionError: null,
+      reconnectAttempts: 0,
+      agentNotFound: false,
+      manualReconnect: mock(),
+    });
   });
 
   it("restores input when send fails", async () => {

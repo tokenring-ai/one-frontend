@@ -21,10 +21,12 @@ import MediaApp from "./pages/apps/MediaApp.tsx";
 import MessagingApp from "./pages/apps/MessagingApp.tsx";
 import MetricsApp from "./pages/apps/MetricsApp.tsx";
 import PluginsApp from "./pages/apps/PluginsApp.tsx";
+import QueueApp from "./pages/apps/QueueApp.tsx";
 import ResearchApp from "./pages/apps/ResearchApp.tsx";
 import SchedulerApp from "./pages/apps/SchedulerApp.tsx";
 import ServicesApp from "./pages/apps/ServicesApp.tsx";
 import SettingsApp from "./pages/apps/SettingsApp.tsx";
+import SkillsApp from "./pages/apps/SkillsApp.tsx";
 import SocialApp from "./pages/apps/SocialApp.tsx";
 import StocksApp from "./pages/apps/StocksApp.tsx";
 import TerminalApp from "./pages/apps/TerminalApp.tsx";
@@ -118,6 +120,8 @@ export default function App() {
                     <Route path="/agents" element={<AgentsApp />} />
                     <Route path="/workflows" element={<WorkflowsApp />} />
                     <Route path="/scheduler" element={<SchedulerApp />} />
+                    <Route path="/queue" element={<QueueApp />} />
+                    <Route path="/skills" element={<SkillsApp />} />
                     <Route path="/canvas" element={<CanvasApp />} />
                     <Route path="/documents" element={<DocumentsApp />} />
                     <Route path="/research" element={<ResearchApp />} />

@@ -28,6 +28,11 @@ void mock.module("../../rpc.ts", () => ({
   },
   useAvailableCommands: mock(() => ({ data: [] })),
   useCommandHistory: mock(() => ({ data: [], mutate: mock() })),
+  useCheckpointList: mock(() => ({ data: [], isLoading: false })),
+  useAgentList: mock(() => ({ data: [], mutate: mock() })),
+  checkpointRPCClient: {
+    launchAgentFromCheckpoint: mock(),
+  },
 }));
 
 void mock.module("./AutoScrollContainer.tsx", () => ({
@@ -36,9 +41,11 @@ void mock.module("./AutoScrollContainer.tsx", () => ({
 void mock.module("./MessageList.tsx", () => ({ default: () => null }));
 void mock.module("./PendingQuestions.tsx", () => ({ default: () => null }));
 void mock.module("./ConnectionStatusBanner.tsx", () => ({ default: () => null }));
+void mock.module("./DeletedAgentRestorePanel.tsx", () => ({ default: () => null }));
 void mock.module("../overlay/file-browser.tsx", () => ({ default: () => null }));
 void mock.module("../HookSelector.tsx", () => ({ default: () => null }));
 void mock.module("../ModelSelector.tsx", () => ({ default: () => null }));
+void mock.module("../SkillSelector.tsx", () => ({ default: () => null }));
 void mock.module("../SubAgentSelector.tsx", () => ({ default: () => null }));
 void mock.module("../ToolSelector.tsx", () => ({ default: () => null }));
 void mock.module("../ui/toast.tsx", () => ({
@@ -95,5 +102,24 @@ describe("ChatPanel", () => {
         message: "hello world",
       },
     });
+  });
+
+  it("shows agent no longer running when agent is not found", () => {
+    useAgentEventStateMock.mockReturnValue({
+      messages: [],
+      agentStatus: { status: "running", inputExecutionQueue: [], currentActivity: "" },
+      currentExecutionState: null,
+      isConnecting: false,
+      connectionError: null,
+      reconnectAttempts: 0,
+      agentNotFound: true,
+      manualReconnect: mock(),
+    });
+
+    renderChatPanel("deleted-agent");
+
+    expect(screen.getByRole("heading", { name: "Agent No Longer Running" })).toBeTruthy();
+    expect(screen.getByText(/deleted-agent/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Browse Available Agents" })).toBeTruthy();
   });
 });

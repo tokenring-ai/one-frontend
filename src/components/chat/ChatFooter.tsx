@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { agentRPCClient } from "../../rpc.ts";
 import HookSelector from "../HookSelector.tsx";
 import ModelSelector from "../ModelSelector.tsx";
+import SkillSelector from "../SkillSelector.tsx";
 import SubAgentSelector from "../SubAgentSelector.tsx";
 import ToolSelector from "../ToolSelector.tsx";
 import { toastManager } from "../ui/toast.tsx";
@@ -907,6 +908,15 @@ export default function ChatFooter({
               <ModelSelector agentId={agentId} triggerVariant="icon" />
               <ToolSelector agentId={agentId} triggerVariant="icon" />
               <HookSelector agentId={agentId} triggerVariant="icon" />
+              <SkillSelector
+                agentId={agentId}
+                triggerVariant="icon"
+                onTrySkill={name => {
+                  setInput(`/${name} `);
+                  setInputError(false);
+                  requestAnimationFrame(() => textareaRef.current?.focus());
+                }}
+              />
               <SubAgentSelector agentId={agentId} triggerVariant="icon" />
             </div>
 

@@ -15,8 +15,10 @@ import MediaLibraryRpcSchema from "@tokenring-ai/media-library/rpc/schema";
 import MetricsRpcSchema from "@tokenring-ai/metrics/rpc/schema";
 import NewsRPMRpcSchema from "@tokenring-ai/newsrpm/rpc/schema";
 import type { IndexedDataSearch } from "@tokenring-ai/newsrpm/schema";
+import QueueRpcSchema from "@tokenring-ai/queue/rpc/schema";
 import ResearchRpcSchema from "@tokenring-ai/research/rpc/schema";
 import SchedulerRpcSchema from "@tokenring-ai/scheduler/rpc/schema";
+import SkillsRpcSchema from "@tokenring-ai/skills/rpc/schema";
 import TasksRpcSchema from "@tokenring-ai/tasks/rpc/schema";
 import TerminalRpcSchema from "@tokenring-ai/terminal/rpc/schema";
 import { arrayableToArray } from "@tokenring-ai/utility/array/arrayable";
@@ -61,6 +63,8 @@ export const vaultRPCClient = createWsRPCClient(baseURL, VaultRpcSchema);
 export const tasksRPCClient = createWsRPCClient(baseURL, TasksRpcSchema);
 export const metricsRPCClient = createWsRPCClient(baseURL, MetricsRpcSchema);
 export const schedulerRPCClient = createWsRPCClient(baseURL, SchedulerRpcSchema);
+export const queueRPCClient = createWsRPCClient(baseURL, QueueRpcSchema);
+export const skillsRPCClient = createWsRPCClient(baseURL, SkillsRpcSchema);
 export const researchRPCClient = createWsRPCClient(baseURL, ResearchRpcSchema);
 
 export function useAvailableCommands(agentId: string) {
@@ -149,6 +153,24 @@ export function useAvailableHooks() {
 
 export function useEnabledHooks(agentId: string) {
   return useAgentStatusStream(agentId ? `enabled-hooks:${agentId}` : null, signal => lifecycleRPCClient.streamEnabledHooks({ agentId }, signal));
+}
+
+export function useSkills(agentId?: string) {
+  return useTypedSWR(
+    agentId ? `/skills/listSkills/${agentId}` : "/skills/listSkills",
+    async () => {
+      const result = await skillsRPCClient.listSkills(stripUndefinedKeys({ agentId, includeDisabled: true }));
+      if (result.status === "agentNotFound") {
+        throw new Error(`Agent not found: ${agentId}`);
+      }
+      return result;
+    },
+    { refreshInterval: 10000 },
+  );
+}
+
+export function useEnabledSkills(agentId: string) {
+  return useAgentStatusStream(agentId ? `enabled-skills:${agentId}` : null, signal => skillsRPCClient.streamEnabledSkills({ agentId }, signal));
 }
 
 export function useAvailableSubAgents(agentId: string) {
@@ -364,6 +386,13 @@ export function useSchedulerHistory(agentId: string | undefined, taskName?: stri
     },
     { refreshInterval: 5000 },
   );
+}
+
+export function useQueues() {
+  return useRPCStreamSWR({
+    key: "queues",
+    subscribe: signal => queueRPCClient.streamQueues({}, signal),
+  });
 }
 
 export function useImages(search?: string, limit?: number) {

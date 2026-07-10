@@ -21,6 +21,7 @@ void mock.module("../../rpc.ts", () => ({
 
 void mock.module("../HookSelector.tsx", () => ({ default: () => null }));
 void mock.module("../ModelSelector.tsx", () => ({ default: () => null }));
+void mock.module("../SkillSelector.tsx", () => ({ default: () => null }));
 void mock.module("../SubAgentSelector.tsx", () => ({ default: () => null }));
 void mock.module("../ToolSelector.tsx", () => ({ default: () => null }));
 

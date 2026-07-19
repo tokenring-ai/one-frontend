@@ -1,5 +1,6 @@
 import AgentRpcSchema from "@tokenring-ai/agent/rpc/schema";
 import AIClientRpcSchema from "@tokenring-ai/ai-client/rpc/schema";
+import ConfigRpcSchema from "@tokenring-ai/app/rpc/configSchema";
 import AppRpcSchema from "@tokenring-ai/app/rpc/schema";
 import AudioRpcSchema from "@tokenring-ai/audio/rpc/schema";
 import BlogRpcSchema from "@tokenring-ai/blog/rpc/schema";
@@ -66,6 +67,7 @@ export const schedulerRPCClient = createWsRPCClient(baseURL, SchedulerRpcSchema)
 export const queueRPCClient = createWsRPCClient(baseURL, QueueRpcSchema);
 export const skillsRPCClient = createWsRPCClient(baseURL, SkillsRpcSchema);
 export const researchRPCClient = createWsRPCClient(baseURL, ResearchRpcSchema);
+export const configRPCClient = createWsRPCClient(baseURL, ConfigRpcSchema);
 
 export function useAvailableCommands(agentId: string) {
   return useTypedSWR(agentId ? `/agent/getAvailableCommands/${agentId}` : null, async () => {
@@ -231,6 +233,14 @@ export function useNewsRPMIndexedDataSearchResults(search: IndexedDataSearch | u
 
 export function usePlugins() {
   return useTypedSWR("/app/listPlugins", () => appRPCClient.listPlugins({}));
+}
+
+export function useConfigSchema() {
+  return useTypedSWR("/config/getConfigSchema", () => configRPCClient.getConfigSchema({}));
+}
+
+export function useConfigValues() {
+  return useTypedSWR("/config/getConfigValues", () => configRPCClient.getConfigValues({}));
 }
 
 export function useAppLogs(options?: { enabled?: boolean }) {

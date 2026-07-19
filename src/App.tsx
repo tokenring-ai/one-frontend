@@ -14,6 +14,7 @@ import AgentsApp from "./pages/apps/AgentsApp.tsx";
 import BlogApp from "./pages/apps/BlogApp.tsx";
 import CalendarApp from "./pages/apps/CalendarApp.tsx";
 import CanvasApp from "./pages/apps/CanvasApp.tsx";
+import ConfigurationApp from "./pages/apps/ConfigurationApp.tsx";
 import DocumentsApp from "./pages/apps/DocumentsApp.tsx";
 import EmailApp from "./pages/apps/EmailApp.tsx";
 import FilesApp from "./pages/apps/FilesApp.tsx";
@@ -135,6 +136,7 @@ export default function App() {
                     <Route path="/messaging" element={<MessagingApp />} />
                     <Route path="/stocks" element={<StocksApp />} />
                     <Route path="/plugins" element={<PluginsApp />} />
+                    <Route path="/configuration" element={<ConfigurationApp />} />
                     <Route path="/services" element={<ServicesApp />} />
                     <Route path="/metrics" element={<MetricsApp />} />
                     <Route path="/settings" element={<SettingsApp />} />

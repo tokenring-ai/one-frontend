@@ -1,4 +1,5 @@
-import { Moon, Settings, Sun } from "lucide-react";
+import { Moon, Settings, SlidersHorizontal, Sun } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSidebar } from "../../components/SidebarContext.tsx";
 import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import { useTheme } from "../../hooks/useTheme.ts";
@@ -77,6 +78,20 @@ export default function SettingsApp() {
                   />
                 </button>
               </div>
+            </div>
+          </section>
+
+          {/* Server configuration */}
+          <section className="space-y-3">
+            <h2 className="text-xs font-bold text-muted uppercase tracking-widest px-1">Server</h2>
+            <div className="bg-secondary border border-primary rounded-xl overflow-hidden">
+              <Link to="/configuration" className="flex items-center justify-between px-4 py-3.5 hover:bg-hover transition-colors focus-ring">
+                <div>
+                  <p className="text-sm font-medium text-primary">Server configuration</p>
+                  <p className="text-2xs text-muted mt-0.5">Override plugin settings for this TokenRing instance</p>
+                </div>
+                <SlidersHorizontal className="w-4 h-4 text-muted" />
+              </Link>
             </div>
           </section>
 

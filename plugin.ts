@@ -1,15 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { TokenRingPlugin } from "@tokenring-ai/app";
+import type { ConfigFieldMeta } from "@tokenring-ai/app/config/metadata";
 import { WebHostService } from "@tokenring-ai/web-host";
 import SPAResource from "@tokenring-ai/web-host/SPAResource";
 import { z } from "zod";
 import packageJSON from "./package.json" with { type: "json" };
 
 const packageConfigSchema = z.object({
-  oneFrontend: z.object({
-    spaDirectory: z.string(),
-  }),
+  oneFrontend: z
+    .object({
+      spaDirectory: z.string().meta({ hidden: true } satisfies ConfigFieldMeta), // runtime-injected build output path
+    })
+    .meta({ label: "Chat Frontend" } satisfies ConfigFieldMeta),
 });
 
 export default {

@@ -1,4 +1,5 @@
 import { CheckCircle2, Package, Settings2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import AppPageHeader from "../../components/ui/AppPageHeader.tsx";
 import ErrorState from "../../components/ui/ErrorState.tsx";
 import LoadingState from "../../components/ui/LoadingState.tsx";
@@ -16,10 +17,14 @@ function PluginCard({ plugin }: { plugin: { name: string; displayName: string; v
           <span className="text-2xs text-muted font-mono shrink-0">{plugin.name}</span>
           <span className="text-2xs text-muted font-mono shrink-0">v{plugin.version}</span>
           {plugin.hasConfig && (
-            <span className="inline-flex items-center gap-0.5 text-2xs px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full shrink-0">
+            <Link
+              to={`/configuration?plugin=${encodeURIComponent(plugin.name)}`}
+              className="inline-flex items-center gap-0.5 text-2xs px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full shrink-0 hover:bg-amber-500/20 transition-colors"
+              title="Configure this plugin"
+            >
               <Settings2 className="w-2.5 h-2.5" />
               config
-            </span>
+            </Link>
           )}
         </div>
         <p className="text-2xs text-muted line-clamp-2">{plugin.description}</p>

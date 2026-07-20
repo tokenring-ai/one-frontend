@@ -5,6 +5,7 @@ import { ChatInputProvider } from "./components/ChatInputContext.tsx";
 import { StorageErrorBanner } from "./components/chat/StorageErrorBanner.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import ModelSelector from "./components/ModelSelector.tsx";
+import LoginOverlay from "./components/overlay/login-overlay.tsx";
 import Sidebar from "./components/Sidebar.tsx";
 import { SidebarProvider } from "./components/SidebarContext.tsx";
 import ToolSelector from "./components/ToolSelector.tsx";
@@ -76,6 +77,7 @@ export default function App() {
     <SidebarProvider>
       <ChatInputProvider>
         <ErrorBoundary>
+          <LoginOverlay />
           <ToastContainer toasts={toasts} onRemove={id => notificationManager.removeToast(id)} />
           {/* Route transition loading bar */}
           {showLoadingBar && (

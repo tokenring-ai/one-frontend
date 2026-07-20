@@ -31,6 +31,7 @@ import WorkflowRpcSchema from "@tokenring-ai/workflow/rpc/schema";
 import { useEffect, useRef } from "react";
 import useSWR, { type Fetcher, type Key, type SWRConfiguration, type SWRResponse } from "swr";
 import { useAgentStatusStream, useRPCStreamSWR } from "./hooks/useRPCStreamSWR.ts";
+import { rpcAuth } from "./rpcAuth.ts";
 
 export function useTypedSWR<Data = unknown, Err extends Error = Error, SWRKey extends Key = Key>(
   key: SWRKey,
@@ -42,32 +43,32 @@ export function useTypedSWR<Data = unknown, Err extends Error = Error, SWRKey ex
 
 const baseURL = new URL("/rpc:ws", window.location.origin);
 
-export const agentRPCClient = createWsRPCClient(baseURL, AgentRpcSchema);
-export const audioRPCClient = createWsRPCClient(baseURL, AudioRpcSchema);
-export const blogRPCClient = createWsRPCClient(baseURL, BlogRpcSchema);
-export const imageGenerationRPCClient = createWsRPCClient(baseURL, ImageGenerationRpcSchema);
-export const videoGenerationRPCClient = createWsRPCClient(baseURL, VideoRpcSchema);
-export const appRPCClient = createWsRPCClient(baseURL, AppRpcSchema);
-export const cloudquoteRPCClient = createWsRPCClient(baseURL, CloudQuoteRpcSchema);
-export const newsrpmRPCClient = createWsRPCClient(baseURL, NewsRPMRpcSchema);
-export const aiRPCClient = createWsRPCClient(baseURL, AIClientRpcSchema);
-export const chatRPCClient = createWsRPCClient(baseURL, ChatRpcSchema);
-export const checkpointRPCClient = createWsRPCClient(baseURL, CheckpointRpcSchema);
-export const filesystemRPCClient = createWsRPCClient(baseURL, FileSystemRpcSchema);
-export const lifecycleRPCClient = createWsRPCClient(baseURL, LifecycleRpcSchema);
-export const mediaLibraryRPCClient = createWsRPCClient(baseURL, MediaLibraryRpcSchema);
-export const workflowRPCClient = createWsRPCClient(baseURL, WorkflowRpcSchema);
-export const calendarRPCClient = createWsRPCClient(baseURL, CalendarRpcSchema);
-export const emailRPCClient = createWsRPCClient(baseURL, EmailRpcSchema);
-export const terminalRPCClient = createWsRPCClient(baseURL, TerminalRpcSchema);
-export const vaultRPCClient = createWsRPCClient(baseURL, VaultRpcSchema);
-export const tasksRPCClient = createWsRPCClient(baseURL, TasksRpcSchema);
-export const metricsRPCClient = createWsRPCClient(baseURL, MetricsRpcSchema);
-export const schedulerRPCClient = createWsRPCClient(baseURL, SchedulerRpcSchema);
-export const queueRPCClient = createWsRPCClient(baseURL, QueueRpcSchema);
-export const skillsRPCClient = createWsRPCClient(baseURL, SkillsRpcSchema);
-export const researchRPCClient = createWsRPCClient(baseURL, ResearchRpcSchema);
-export const configRPCClient = createWsRPCClient(baseURL, ConfigRpcSchema);
+export const agentRPCClient = createWsRPCClient(baseURL, AgentRpcSchema, rpcAuth);
+export const audioRPCClient = createWsRPCClient(baseURL, AudioRpcSchema, rpcAuth);
+export const blogRPCClient = createWsRPCClient(baseURL, BlogRpcSchema, rpcAuth);
+export const imageGenerationRPCClient = createWsRPCClient(baseURL, ImageGenerationRpcSchema, rpcAuth);
+export const videoGenerationRPCClient = createWsRPCClient(baseURL, VideoRpcSchema, rpcAuth);
+export const appRPCClient = createWsRPCClient(baseURL, AppRpcSchema, rpcAuth);
+export const cloudquoteRPCClient = createWsRPCClient(baseURL, CloudQuoteRpcSchema, rpcAuth);
+export const newsrpmRPCClient = createWsRPCClient(baseURL, NewsRPMRpcSchema, rpcAuth);
+export const aiRPCClient = createWsRPCClient(baseURL, AIClientRpcSchema, rpcAuth);
+export const chatRPCClient = createWsRPCClient(baseURL, ChatRpcSchema, rpcAuth);
+export const checkpointRPCClient = createWsRPCClient(baseURL, CheckpointRpcSchema, rpcAuth);
+export const filesystemRPCClient = createWsRPCClient(baseURL, FileSystemRpcSchema, rpcAuth);
+export const lifecycleRPCClient = createWsRPCClient(baseURL, LifecycleRpcSchema, rpcAuth);
+export const mediaLibraryRPCClient = createWsRPCClient(baseURL, MediaLibraryRpcSchema, rpcAuth);
+export const workflowRPCClient = createWsRPCClient(baseURL, WorkflowRpcSchema, rpcAuth);
+export const calendarRPCClient = createWsRPCClient(baseURL, CalendarRpcSchema, rpcAuth);
+export const emailRPCClient = createWsRPCClient(baseURL, EmailRpcSchema, rpcAuth);
+export const terminalRPCClient = createWsRPCClient(baseURL, TerminalRpcSchema, rpcAuth);
+export const vaultRPCClient = createWsRPCClient(baseURL, VaultRpcSchema, rpcAuth);
+export const tasksRPCClient = createWsRPCClient(baseURL, TasksRpcSchema, rpcAuth);
+export const metricsRPCClient = createWsRPCClient(baseURL, MetricsRpcSchema, rpcAuth);
+export const schedulerRPCClient = createWsRPCClient(baseURL, SchedulerRpcSchema, rpcAuth);
+export const queueRPCClient = createWsRPCClient(baseURL, QueueRpcSchema, rpcAuth);
+export const skillsRPCClient = createWsRPCClient(baseURL, SkillsRpcSchema, rpcAuth);
+export const researchRPCClient = createWsRPCClient(baseURL, ResearchRpcSchema, rpcAuth);
+export const configRPCClient = createWsRPCClient(baseURL, ConfigRpcSchema, rpcAuth);
 
 export function useAvailableCommands(agentId: string) {
   return useTypedSWR(agentId ? `/agent/getAvailableCommands/${agentId}` : null, async () => {

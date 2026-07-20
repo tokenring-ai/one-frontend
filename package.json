@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "watch-build": "vite build --watch --minify false",
+    "watch:build": "vite build --watch --minify false",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage"
